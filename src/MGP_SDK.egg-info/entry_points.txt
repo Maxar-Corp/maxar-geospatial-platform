@@ -1,0 +1,8 @@
+[console_scripts]
+area = MGP_SDK.streaming.cli_commands:calculate_bbox_sqkm
+config = MGP_SDK.streaming.cli_commands:config_file
+download = MGP_SDK.streaming.cli_commands:download
+password = MGP_SDK.streaming.cli_commands:reset_password
+search = MGP_SDK.streaming.cli_commands:search
+secret = MGP_SDK.token_service.cli_commands:show_secret
+token = MGP_SDK.token_service.cli_commands:create_token
