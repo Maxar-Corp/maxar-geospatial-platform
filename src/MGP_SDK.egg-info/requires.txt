@@ -1,0 +1,10 @@
+gdal
+pyproj
+shapely
+requests
+ipython
+pillow
+click
+rasterio
+beautifulsoup4
+lxml

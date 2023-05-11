@@ -1,3 +1,23 @@
+Metadata-Version: 2.1
+Name: MGP-SDK
+Version: 1.0.0
+Summary: SDK for interacting with Maxar Geospatial Platform
+Author: MDS Marianas Team
+Author-email: DL-GCS-Marianas@maxar.com
+License: MIT
+Project-URL: Documentation, https://maxar-geospatial-platform.readthedocs.io/en/latest/
+Project-URL: Source, https://github.com/Maxar-Corp/maxar-geospatial-platform
+Keywords: OGC,WMS,WFS,WMTS,WCS,MAXAR,IMAGERY,GIS
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+
 # Maxar Geospatial Platform SDK
 
 # Installation Instructions
@@ -16,8 +36,6 @@
 from MGP_SDK.interface import Interface
 interface = Interface()
 print(help(interface))
-print(help(interface.streaming))
-print(help(interface.account_service))
 ```
 # Documentation
 
