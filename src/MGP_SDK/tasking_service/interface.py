@@ -15,7 +15,7 @@ class Interface:
         self.tasking = Tasking(self.auth)
 
     def new_tasking(self, start_datetime: str, end_datetime: str, aoi_geojson: dict, recipe: str, order_templates: dict,
-                    **kwargs):
+                    validate=False, **kwargs):
         """
         Initiates the creating of a tasking (async) using one of the preconfigured recipes: 50cm_Color, 30cm_Color.
         If a kwarg is null or not provided, default recipe value will be used
@@ -26,6 +26,7 @@ class Interface:
             {"type":"Polygon","coordinates":[[[...]]]}
             recipe (string) = The name of one of the configured recipes for tasking, e.g. "50cm_Color" or "30cm_Color"
             order_templates (list) = Template for order to be placed. See ordering_service for examples
+            validate (bool) = Binary whether to validate tasking request. Defaults to False
         Kwargs:
             max_cloud_cover (string) = Maximum cloud cover.
             max_off_nadir_angle (string) = Maximum off nadir angle.
@@ -37,7 +38,7 @@ class Interface:
         """
 
         return self.tasking.create_new_tasking(start_datetime, end_datetime, aoi_geojson, recipe, order_templates,
-                                               **kwargs)
+                                               validate, **kwargs)
 
     def get_tasking_request(self, tasking_id: str):
         """

@@ -21,6 +21,7 @@ discovery = Interface().discovery_service
 - [Get Root Catalog](#get-root-catalog--get_root_catalog)
 - [Get All Collections](#get-all-collections--get_call_collections)
 - [Get Collection Definition](#get-collection-definition--get_collection_definition)
+- [Get STAC Item](#get-stac-item--get_stac_item)
 - [Get Top Level Sub Catalog](#get-top-level-sub-catalog--get_top_level_sub_catalog)
 - [Get A Sub Catalog](#get-a-sub-catalog--get_sub_catalog)
 - [Get All Sub Catalog Collections](#get-all-sub-catalog-collections--get_all_sub_catalog_collections)
@@ -215,6 +216,16 @@ Keyword Arguments:<br>
 Returns: JSON response
 ```python
 collections = discovery.get_all_collections(limit=7, orderby='id')
+```
+
+### Get STAC Item / get_stac_item()
+Return a STAC item's information<br>
+Arguments<br>
+**collection_id**: str, name of the collection to search e.g. wv01<br>
+**item_id:** str, identifier of the desired item<br>
+Returns: Dictionary of desired STAC item<br>
+```python
+stac = discovery.get_stac_item(collection_id='wv01', item_id='123456789abcdefg')
 ```
 
 ### Get Collection Definition / get_collection_definition()

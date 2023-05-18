@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
   name = 'MGP_SDK',
-  version = '1.0.0',
+  version = '1.1.0',
   license='MIT',
   description = 'SDK for interacting with Maxar Geospatial Platform',
   long_description=README,
@@ -21,14 +21,12 @@ setup(
   keywords = ['OGC', 'WMS', 'WFS', 'WMTS', 'WCS', 'MAXAR', 'IMAGERY', 'GIS'],
   python_requires= '>=3.7',
   install_requires=[
-          'gdal',
           'pyproj',
           'shapely',
           'requests',
           'ipython',
           'pillow',
           'click',
-          'rasterio',
           'beautifulsoup4',
           'lxml'
       ],
@@ -49,6 +47,7 @@ setup(
     download=MGP_SDK.streaming.cli_commands:download
     area=MGP_SDK.streaming.cli_commands:calculate_bbox_sqkm
     token=MGP_SDK.token_service.cli_commands:create_token
-    secret=MGP_SDK.token_service.cli_commands:show_secret
+    get_token=MGP_SDK.token_service.cli_commands:get_tokens
+    delete_token=MGP_SDK.token_service.cli_commands:delete_tokens
     '''
 )

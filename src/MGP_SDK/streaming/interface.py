@@ -201,3 +201,12 @@ class Interface:
         # TODO Determine best use case for seamline streaming
         # return self.ogc.create_mosaic(base_dir, img_format, img_size, **kwargs)
 
+    def calculate_sqkm(self, bbox: str):
+        """
+        Function calculates the area in square kilometers of the desired bounding box
+        Args:
+            bbox (string) = Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)
+        Returns:
+            Float of bounding box area in square kilometers
+        """
+        return self.ogc.calculate_sqkm(bbox=bbox)

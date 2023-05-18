@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: MGP-SDK
-Version: 1.0.0
+Version: 1.1.0
 Summary: SDK for interacting with Maxar Geospatial Platform
 Author: MDS Marianas Team
 Author-email: DL-GCS-Marianas@maxar.com
@@ -36,6 +36,8 @@ Description-Content-Type: text/markdown
 from MGP_SDK.interface import Interface
 interface = Interface()
 print(help(interface))
+print(help(interface.streaming))
+print(help(interface.account_service))
 ```
 # Documentation
 

@@ -659,9 +659,9 @@ class OgcInterface:
                 from rasterio.merge import merge
             except:
                 self._pillow_mosaic(base_dir, img_format, img_size=img_size, **kwargs)
-                print("GDAL is not installed on your machine. The downloaded image will not be georeferenced. "
+                print("GDAL and rasterio are not installed on your machine. The downloaded image will not be georeferenced. "
                       " Please refer to the MGP_SDK documentation for steps on how to install GDAL in "
-                      "your environment.")
+                      "your environment. To install rasterio use: pip install rasterio")
             else:
                 srcs_to_mosaic = []
                 for image in os.listdir(base_dir):

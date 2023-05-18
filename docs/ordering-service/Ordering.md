@@ -23,7 +23,9 @@ ordering = Interface().order_service
 - [Cancel Multiple Orders](#cancel-multiple-orders--cancel__multiple_orders)
 - [Get Order Details](#get-order-details--get_order_details)
 - [Get My Orders](#get-my-orders--get_my_orders)
+- [Get User Orders](#get-user-orders--get_user_orders)
 - [Get Order Events](#get-order-events--get_order_events)
+- [Get All Pipelines](#get-all-pipelines--get_all_pipelines)
 - [Get Pipeline Details](#get-pipeline-details--get_pipeline_details)
 
 ### Place a New Order / place_order()
@@ -117,19 +119,18 @@ order_detials = ordering.get_order_details('99926034175760632')
 print(order_detials)
 ```
 
-### Get My Orders / get_my_orders()
-Returns a list of a users order by user ID<br>
+### Get User Orders / get_user_orders()
+Returns a list of a users order by user ID. If no ID is provided, returns a list of the authenticated user's orders.<br>
 Args:<br>
-**user_id**: int, ID of the user
+**user_id**: str, the ID of the desired user<br>
 Keyword Arguments:<br>
 **limit**: int, (optional) limits the number of responses returned<br>
 **filter**: list, Filter results that match values contained in the given key separated by a colon<br>
-**sort**: str, Indicates sort order, desc (default) (newest first) and asc<br>
-**start_date**: datetime, ISO-8601 formatted date after which to query orders (inclusive)<br>
-**end_date**: datetime, ISO-8601 formatted date before which to query orders (inclusive)<br>
+**sort**: str, Indicates sort order, desc (default) for descending order (newest first) and asc for ascending order (oldest firts)<br>
+**start_date**: str, ISO-8601 formatted date after which to query orders (inclusive)<br>
+**end_date**: str, ISO-8601 formatted date before which to query orders (inclusive)<br>
 ```python
-orders = ordering.get_my_orders(144445555, limit=5, filter="pipeline_id:imagery/analysis-ready", sort='asc', 
-                                start_date='2022-12-02T18:48:18Z', end_date='2023-01-02')
+user_orders = ordering.get_user_orders(user_id='f:123456789:1')
 ```
 
 ### Get Order Events / get_order_events()
@@ -141,6 +142,12 @@ Keyword Arguments:<br>
 **filter**: list, Filter results that match values contained in the given key separated by a colon<br>
 ```python
 events = ordering.get_order_events('99926034175760632', limit=5, filter="pipeline_id:imagery/analysis-ready")
+```
+
+### Get All Pipelines / get_all_pipelines()
+Returns a list of all available pipelines<br>
+```python
+all_pipelines = ordering.get_all_pipelines()
 ```
 
 ### Get Pipeline Details / get_pipeline_details()
