@@ -16,7 +16,7 @@ class Tasking:
         self.authorization = {"Authorization": f"Bearer {self.token}"}
 
     def create_new_tasking(self, start_datetime: str, end_datetime: str, aoi_geojson: dict, recipe: str,
-                           order_templates: dict, **kwargs):
+                           order_templates: dict, validate=False, **kwargs):
         """
         Make a tasking request based on imagery recipes
         Args:
@@ -26,6 +26,7 @@ class Tasking:
             {"type":"Polygon","coordinates":[[[...]]]}
             recipe (string) = The name of one of the configured recipes for tasking, e.g. "50cm_Color" or "30cm_Color"
             order_templates (dict) = Template for order to be placed. See ordering_service for examples
+            validate (bool) = Binary whether to validate tasking request. Defaults to False
         Kwargs:
             max_cloud_cover (string) = Maximum cloud cover.
             max_off_nadir_angle (string) = Maximum off nadir angle.
@@ -37,9 +38,9 @@ class Tasking:
         time_check = [start_datetime, end_datetime]
         for time in time_check:
             try:
-                datetime.fromisoformat(time)
-            except ValueError:
-                raise ValueError(f'{time} is not in a proper format. Example: 2020-07-10 15:00:00.000')
+                datetime.fromisoformat(time.replace('Z', '+00:00'))
+            except:
+                raise ValueError(f'{time} is not in a proper format. Example: 2020-07-10T15:00:00+00:00')
         if recipe is not '50cm_Color':
             if recipe is not '30cm_color':
                 raise Exception('Recipe must be one of 50cm_Color or 30cm_Color')
@@ -53,7 +54,11 @@ class Tasking:
             }
             optional_parameters = ['max_cloud_cover', 'max_off_nadir_angle', 'min_sun_elevation_angle']
             data = {**{k: v for k, v in kwargs.items() if k in optional_parameters}, **payload}
-            response = requests.post(self.base_url, data=json.dumps(data), headers=self.authorization,
+            if validate:
+                url = self.base_url + "?validation_only=true"
+            else:
+                url = self.base_url
+            response = requests.post(url, data=json.dumps(data), headers=self.authorization,
                                      verify=self.auth.SSL)
             process._response_handler(response)
             return response.json()

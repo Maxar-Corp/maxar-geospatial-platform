@@ -14,6 +14,18 @@ class Pipelines:
         self.token = self.auth.refresh_token()
         self.authorization = {'Authorization': f'Bearer {self.token}'}
 
+    def list_all_pipelines(self):
+        """
+        List out all available pipelines
+        Returns:
+            Dictionary of all available pipelines and their information
+        """
+
+        url = f"{self.base_url}?limit=100"
+        response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
+        process._response_handler(response)
+        return response.json()
+
     def get_pipeline(self, namespace: str, name: str):
         """
         Get the schema for a specific pipeline

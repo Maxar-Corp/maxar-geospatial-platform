@@ -30,7 +30,7 @@ class Auth:
         self.client_id = client_id
         self.access = None
         self.refresh = None
-        self.version = "Python1.0.0"
+        self.version = "Python1.1.0"
         self.api_version = 'v1'
         self.SSL = True
 
@@ -139,7 +139,7 @@ class Auth:
         if len(existing_tokens.json()) == 0:
             token = create_token_service_token()
         else:
-            tokens = [i for i in existing_tokens.json() if "SDK_token" in i["name"]]
+            tokens = [i for i in existing_tokens.json() if i["name"] is not None and "SDK_token" in i["name"]]
             if len(tokens) == 0:
                 token = create_token_service_token()
             else:

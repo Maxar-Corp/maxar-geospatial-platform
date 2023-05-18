@@ -41,7 +41,7 @@ class Search:
                     datetime.strptime(kwargs["datetime"], '%Y-%m-%dT%H:%M:%SZ')
                 except:
                     raise Exception('datetime not in ISO 8601 format or date range not separated by a \'/\'')
-        params_list = ['bbox', 'datetime', 'ids', 'collections' 'intersects', 'where', 'orderby', 'limit']
+        params_list = ['bbox', 'datetime', 'ids', 'collections', 'intersects', 'where', 'orderby', 'limit']
         params = {**{k: v for k, v in kwargs.items() if k in params_list}}
         url = self.base_url
         response = requests.get(url, params=params, headers=self.authorization, verify=self.auth.SSL)

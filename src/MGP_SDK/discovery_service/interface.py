@@ -81,10 +81,21 @@ class Interface:
 
         return self.collections.get_collection_definition(**kwargs)
 
+    def get_stac_item(self, collection_id: str, item_id: str):
+        """
+        View details about a specific STAC item
+        Args:
+            collection_id (string) = Name of the collection to search e.g. wv01
+            item_id (string) = Identifier of the desired item
+        Returns:
+            Dictionary of the desired item's information
+        """
+        return self.collections.return_stac_item(collection_id, item_id)
+
     def get_top_level_sub_catalog(self, **kwargs):
         """
         View the available Maxar Sub-Catalogs that can be navigated as a self-contained STAC catalog
-        Keyword Args:
+        Kwargs:
             orderby (string) = SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default
             'datetime DESC, id ASC'
             limit (int) = Maximum number of items to return

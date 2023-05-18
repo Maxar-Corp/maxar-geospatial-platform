@@ -31,6 +31,7 @@ Args:<br>
 **aoi_geojson**: Geojson polygon of area to cover with the tasking request<br>
 **recipe**: the name of one of the configured recipes for the tasking request, e.g. "50cm_Color" or "30cm_Color"<br>
 **order_templates**: Template for order to be placed. See ordering_service for examples<br> 
+**validate**: bool, Binary whether to validate tasking request. Defaults to False<br>
 Keyword Arguments:<br>
 **max_cloud_cover**: double, Maximum cloud cover.<br>
 **max_off_nadir_angle**: double, Maximum off nadir angle.<br>

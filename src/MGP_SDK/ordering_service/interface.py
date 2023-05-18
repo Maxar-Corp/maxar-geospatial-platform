@@ -78,7 +78,7 @@ class Interface:
         orders
 
         Args:
-            user_id (int) = ID of the requested order
+            user_id (string) = The identifier of the desired user
         Kwargs:
             limit (int) = Limits the number of responses returned
             filter (list) = Filter results that match values contained in the given key separated by a colon
@@ -125,6 +125,15 @@ class Interface:
         """
 
         return self.orders.get_order_events_by_id(order_id, **kwargs)
+
+    def get_all_pipelines(self):
+        """
+        List out all available pipelines
+        Returns:
+            Dictionary of all available pipelines and their information
+        """
+
+        return self.pipelines.list_all_pipelines()
 
     def get_pipeline_details(self, namespace: str, name: str):
         """

@@ -29,7 +29,7 @@ Config File
 
 We recommend creating a credentials file to store your login information for future sessions in one of two ways. 
 
-* Use the command line interface command ``config`` from the command prompt and follow the prompts. See [Command Line Interface](ogc/cli_commands)
+* Use the command line interface command ``config`` from the command prompt and follow the prompts. See [Command Line Interface](cli_commands.md)
 * Create a credentials file called ``.MGP-config`` in your home directory with the following format:
 
 			[mps] 
@@ -39,5 +39,8 @@ We recommend creating a credentials file to store your login information for fut
 
 After creating your config file, you are now ready to start with the following guides:
 
-  * [Quickstart Guide for OGC](ogc/quickstart) 
-  * [Quickstart Guide for Admin](account-services/quickstart)
+  * [Quickstart Guide for Admin](quickstarts/quickstart-admin.md)
+  * [Quickstart Guide for Streaming](quickstarts/quickstart-streaming.md) 
+  * [Quickstart Guide for Discovery](quickstarts/quickstart-discovery.md)
+  * [Quickstart Guide for Ordering](quickstarts/quickstart-ordering.md)
+  * [Quickstart Guide for Monitoring](quickstarts/quickstart-monitoring.md)
