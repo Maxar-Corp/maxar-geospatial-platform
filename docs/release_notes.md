@@ -1,5 +1,10 @@
 # Release Notes
 
+## Version 1.1.1 (May 23, 2023)
+
+* Added Jupyter notebook example for monitoring-service
+* Bug fix for monitoring service
+
 ## Version 1.1.0 (May 18, 2023)
 
 * CLI updates for token-service

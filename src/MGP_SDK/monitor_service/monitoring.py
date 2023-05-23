@@ -15,11 +15,12 @@ class Monitoring:
         self.token = self.auth.refresh_token()
         self.authorization = {"Authorization": f"Bearer {self.token}"}
 
-    def create_new_monitor(self, source: str, **kwargs):
+    def create_new_monitor(self, source: str, validate=False, **kwargs):
         """
         Creates a new monitor
         Args:
             source (string) = The ID of the event source to listen to
+            validate (bool) = Binary whether to validate tasking request. Defaults to False
         Kwargs:
             start_datetime (string) = ISO-8601-formatted datetime string indicating when the monitor should start
             end_datetime (string) = ISO-8601-formatted datetime string indicating when the monitor should end
@@ -46,7 +47,11 @@ class Monitoring:
                 raise Exception('Date is not properly formatted. eg: 2023-03-03T10:30:00.000Z')
         data = {**{k: v for k, v in kwargs.items() if k in parameter_list}}
         data.update({"source": source})
-        response = requests.post(self.base_url, data=json.dumps(data), headers=self.authorization, verify=self.auth.SSL)
+        if validate:
+            url = self.base_url + "?validation_only=true"
+        else:
+            url = self.base_url
+        response = requests.post(url, data=json.dumps(data), headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
 
@@ -77,7 +82,7 @@ class Monitoring:
         url = f'{self.base_url}/{monitor_id}/{status}'
         response = requests.post(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
-        if response.status_code == '200':
+        if response.status_code == 200:
             return 'Status change accepted'
 
     def monitor_list(self, **kwargs):
@@ -108,7 +113,7 @@ class Monitoring:
                 except:
                     raise Exception("Filter must be a key value pair separated by a colon (:) " + filter)
         if 'sort' in kwargs.keys():
-            if kwargs['sort'] is not 'asc' or kwargs['sort'] is not 'desc':
+            if kwargs['sort'] != 'asc' and kwargs['sort'] != 'desc':
                 raise Exception('sort must be either asc or desc. ' + kwargs['sort'])
         params = {}
         kwarg_list = ["limit", "filter", "sort"]
