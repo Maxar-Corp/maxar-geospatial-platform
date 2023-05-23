@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
   name = 'MGP_SDK',
-  version = '1.1.0',
+  version = '1.1.1',
   license='MIT',
   description = 'SDK for interacting with Maxar Geospatial Platform',
   long_description=README,

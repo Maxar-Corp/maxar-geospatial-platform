@@ -14,11 +14,12 @@ class Interface:
         self.auth = auth
         self.monitoring = Monitoring(self.auth)
 
-    def new_monitor(self, source: str, **kwargs):
+    def new_monitor(self, source: str, validate=False, **kwargs):
         """
         Creates a new monitor
         Args:
             source (string) = the ID of the event source to listen to
+            validate (bool) = Binary whether to validate tasking request. Defaults to False
         Kwargs:
             start_datetime (string) = ISO-8601-formatted datetime string indicating when the monitor should start
             end_datetime (string) = ISO-8601-formatted datetime string indicating when the monitor should end
@@ -31,7 +32,7 @@ class Interface:
             JSON response
         """
 
-        return self.monitoring.create_new_monitor(source, **kwargs)
+        return self.monitoring.create_new_monitor(source, validate, **kwargs)
 
     def toggle_monitor_status(self, monitor_id: str, status: str):
         """
@@ -47,7 +48,7 @@ class Interface:
 
         current_status = self.get_monitor(monitor_id)['data']['enabled']
         if (status == 'enable' and current_status is True) or (status == 'disable' and current_status is False):
-            raise Exception(f'Monitor {monitor_id} is already {status}ed.')
+            raise Exception(f'Monitor {monitor_id} is already {status}d.')
         return self.monitoring.toggle_monitor(monitor_id, status)
 
     def get_monitor(self, monitor_id: str):

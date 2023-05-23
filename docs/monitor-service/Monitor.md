@@ -25,6 +25,7 @@ monitoring = Interface().monitoring_service
 Initiates the creation of a new monitor<br>
 Args:<br>
 **source**: string, the ID of the event source to listen to. e.g 'discovery/catalog'<br>
+**validate**: bool, binary of only validating, not submitting the monitor. Defaults to False
 Keyword Arguments:<br>
 **start_datetime**: string, ISO-8601-formatted datetime string indicating when the monitor should start<br>
 **end_datetime**: string, ISO-8601-formatted datetime string indicating when the monitor should end<br>
