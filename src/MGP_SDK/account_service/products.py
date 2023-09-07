@@ -41,10 +41,10 @@ class Products:
         all_products = self.get_products()
         self._paramater_checker(product_category, usage_type, catalog_type)
         filtered_products = [i for i in all_products if
-                             (i['product_category'].lower() == str(product_category).lower() or not product_category)
-                             and (i['usage_type'] == str(usage_type) or not usage_type)
+                             (i['productCategory'].lower() == str(product_category).lower() or not product_category)
+                             and (i['usageType'] == str(usage_type) or not usage_type)
                              and (i['age'] == str(age) or not age)
-                             and (i['catalog_type'] == str(catalog_type).lower() or not catalog_type)]
+                             and (i['catalogType'] == str(catalog_type).lower() or not catalog_type)]
         return filtered_products
 
     def _paramater_checker(self, product_category, usage_type, catalog_type):

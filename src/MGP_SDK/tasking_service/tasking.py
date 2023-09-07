@@ -41,8 +41,8 @@ class Tasking:
                 datetime.fromisoformat(time.replace('Z', '+00:00'))
             except:
                 raise ValueError(f'{time} is not in a proper format. Example: 2020-07-10T15:00:00+00:00')
-        if recipe is not '50cm_Color':
-            if recipe is not '30cm_color':
+        if recipe != '50cm_Color':
+            if recipe != '30cm_Color':
                 raise Exception('Recipe must be one of 50cm_Color or 30cm_Color')
         else:
             payload = {

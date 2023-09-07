@@ -32,6 +32,7 @@ src/MGP_SDK/auth/auth.py
 src/MGP_SDK/basemap_service/__init__.py
 src/MGP_SDK/basemap_service/basemaps.py
 src/MGP_SDK/basemap_service/interface.py
+src/MGP_SDK/cli_commands/cli_commands.py
 src/MGP_SDK/discovery_service/__init__.py
 src/MGP_SDK/discovery_service/catalogs.py
 src/MGP_SDK/discovery_service/collections.py
@@ -46,7 +47,6 @@ src/MGP_SDK/ordering_service/interface.py
 src/MGP_SDK/ordering_service/orders.py
 src/MGP_SDK/ordering_service/pipelines.py
 src/MGP_SDK/streaming/__init__.py
-src/MGP_SDK/streaming/cli_commands.py
 src/MGP_SDK/streaming/interface.py
 src/MGP_SDK/streaming/wcs_archive.py
 src/MGP_SDK/tasking_service/__init__.py
@@ -56,7 +56,6 @@ src/MGP_SDK/three_d/__init__.py
 src/MGP_SDK/three_d/interface.py
 src/MGP_SDK/three_d/three_d.py
 src/MGP_SDK/token_service/__init__.py
-src/MGP_SDK/token_service/cli_commands.py
 src/MGP_SDK/token_service/token.py
 src/MGP_SDK/usage_service/__init__.py
 src/MGP_SDK/usage_service/interface.py

@@ -24,7 +24,7 @@ class Interface:
             start_datetime (string) = ISO-8601-formatted datetime string indicating when the monitor should start
             end_datetime (string) = ISO-8601-formatted datetime string indicating when the monitor should end
             description (string) = A human-friendly description of the monitor
-            intersects (dict) = A GeoJSON geometry indicating the area of interest for the monitor
+            aoi_geojson (dict) = A GeoJSON geometry indicating the area of interest for the monitor
             match_criteria (dict) = The fields and values to match against; criteria are specified using a JSON object
             monitor_notifications (list) = Destination(s) where notifications should be sent
             order_templates (list) = Orders to be placed automatically when an event matches the monitor's criteria
@@ -46,9 +46,9 @@ class Interface:
             Exception: If the status provided is already applied to the monitor
         """
 
-        current_status = self.get_monitor(monitor_id)['data']['enabled']
-        if (status == 'enable' and current_status is True) or (status == 'disable' and current_status is False):
-            raise Exception(f'Monitor {monitor_id} is already {status}d.')
+        # current_status = self.get_monitor(monitor_id)['data']['enabled']
+        # if (status == 'enable' and current_status is True) or (status == 'disable' and current_status is False):
+        #     raise Exception(f'Monitor {monitor_id} is already {status}d.')
         return self.monitoring.toggle_monitor(monitor_id, status)
 
     def get_monitor(self, monitor_id: str):

@@ -53,19 +53,19 @@ class Collections:
         response = response.json()
 
         # pagination
-        if "links" in response.keys():
-            is_next = response["links"][0]["rel"] == "next"
-            while is_next:
-                sub_response = requests.get(url, params=params, headers=self.authorization,
-                                            verify=self.auth.SSL)
-                process._response_handler(sub_response)
-                sub_response = sub_response.json()
-                response["features"].append(sub_response["features"])
-                if "links" in sub_response.keys():
-                    is_next = sub_response["links"][0]["rel"] == "next"
-                    url = sub_response["links"][0]["href"]
-                else:
-                    is_next = False
+        # if "links" in response.keys():
+        #     is_next = response["links"][0]["rel"] == "next"
+        #     while is_next:
+        #         sub_response = requests.get(url, params=params, headers=self.authorization,
+        #                                     verify=self.auth.SSL)
+        #         process._response_handler(sub_response)
+        #         sub_response = sub_response.json()
+        #         response["features"].append(sub_response["features"])
+        #         if "links" in sub_response.keys():
+        #             is_next = sub_response["links"][0]["rel"] == "next"
+        #             url = sub_response["links"][0]["href"]
+        #         else:
+        #             is_next = False
 
         return response
 
@@ -151,18 +151,18 @@ class Collections:
         process._response_handler(response)
         response = response.json()
         # pagination
-        if "limit" not in kwargs.keys():
-            is_next = response["links"][0]["rel"] == "next"
-            while is_next:
-                sub_response = requests.get(url, params=params, headers=self.authorization,
-                                            verify=self.auth.SSL)
-                process._response_handler(sub_response)
-                sub_response = sub_response.json()
-                response["collections"].append(sub_response["collections"])
-                if "links" in sub_response.keys():
-                    is_next = sub_response["links"][0]["rel"] == "next"
-                    url = sub_response["links"][0]["href"]
-                else:
-                    is_next = False
+        # if "limit" not in kwargs.keys():
+        #     is_next = response["links"][0]["rel"] == "next"
+        #     while is_next:
+        #         sub_response = requests.get(url, params=params, headers=self.authorization,
+        #                                     verify=self.auth.SSL)
+        #         process._response_handler(sub_response)
+        #         sub_response = sub_response.json()
+        #         response["collections"].append(sub_response["collections"])
+        #         if "links" in sub_response.keys():
+        #             is_next = sub_response["links"][0]["rel"] == "next"
+        #             url = sub_response["links"][0]["href"]
+        #         else:
+        #             is_next = False
 
         return response

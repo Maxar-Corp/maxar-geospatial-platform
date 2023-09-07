@@ -2,6 +2,9 @@ import requests
 from MGP_SDK import process
 from MGP_SDK.auth.auth import Auth
 from MGP_SDK.OGC_Spec.interface import OgcInterface
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
 
 class RasterAnalytics:
     def __init__(self, auth: Auth):
@@ -12,8 +15,17 @@ class RasterAnalytics:
         self.token = self.auth.refresh_token()
         self.authorization = {"Authorization": f"Bearer {self.token}"}
         self.token_service_token = self.auth.token_service_token()['apiToken']
+
+    def _gdal_check(self):
+        try:
+            from osgeo import gdal
+            return gdal
+        except:
+            raise Exception("Gdal not found on this machine")
+
     def _parameters_formatter(self,params:list):
         return "&".join(["p=" + param for param in params])
+
     def get_image_metadata(self, function:str, script_id:str, **kwargs):
         """
         Get metadata about an image given an IPE resource ID, function name, and parameters.
@@ -63,8 +75,101 @@ class RasterAnalytics:
             response = requests.get(url, verify=self.auth.SSL)
         return process._response_handler(response)
 
+    def create_raster_url(self, script_id, function, collect_id, api_token, crs='UTM', **kwargs):
+        """
+        Formats a vsicurl URL to be utilized with further raster functions
+        Args:
+            script_id (string) = Desired IPEScript
+            function (string) = Desired function of the IPEScript
+            collect_id (string) = Desired raster image ID
+            api_token (string) = User's maxar_api_token
+            crs (string) = Desired projection. Defaults to UTM
+        Kwargs:
+            bands (string) = Comma separated string of desired bands. Ex: red,green,blue
+            dra (string) = Binary of whether or not to apply dra to the raster. String of bool (true, false)
+            interpolation (string) = Desired resizing or (re)projection from one pixel grid to another
+        Returns:
+            URL formatted with desired parameters and /vsicurl/ prefix
+        """
 
+        if script_id.lower() == 'browse':
+            function = 'browse'
+            bands = "red,green,blue"
+            for item in kwargs.keys():
+                if item == 'bands':
+                    bands = kwargs['bands']
+            vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
+                      f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&p=bands=%22{bands}%22&maxar_api_token={api_token}'
+        elif script_id.lower() == 'ortho-image':
+            dra = "false"
+            interp = "MTF"
+            bands = "red,green,blue"
+            ortho_functions = ["ortho", "pansharp_ortho"]
+            if function not in ortho_functions:
+                raise Exception("{} is not a valid function".format(function))
+            for item in kwargs.keys():
+                if item == 'dra':
+                    dra = kwargs['dra']
+                if item == 'bands':
+                    bands = kwargs['bands']
+            if function == "ortho":
+                for item in kwargs.keys():
+                    if item == 'interpolation':
+                        interp = kwargs['interpolation']
+                vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
+                          f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&p=bands=%22{bands}%22&p=interpolation=%22{interp}%22' \
+                          f'&p=dra={dra}&maxar_api_token={api_token}'
+            else:
+                function = 'pansharp_ortho'
+                vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
+                          f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&p=bands=%22{bands}%22&p=dra={dra}&maxar_api_token={api_token}'
+        elif script_id.lower() == 'ndvi-image':
+            ndvi_functions = ["ndvi", "ndvi_dra", "ndvi_colorized"]
+            if function not in ndvi_functions:
+                raise Exception("{} is not a valid function".format(function))
+            function = function
+            vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
+                      f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&maxar_api_token={api_token}'
+        else:
+            raise Exception(
+                'script_id {} not recognized. Please use browse, ortho-image, or ndvi-image'.format(script_id))
+        return vsi_url
 
+    def fetch_arrays(self, raster_url, xoff, yoff, width, height):
+        """
+        Lists out the arrays of a raster
+        Args:
+            raster_url (string) = Vsicurl formatted URL of a raster object
+            xoff (int) = Number of pixels to offset on the x axis
+            yoff (int) = Number of pixels to offset on the y axis
+            width (int) = Number of pixels for the returned raster on the x axis
+            height (int) = Number of pixels for the returned raster on the y axis
+        Returns:
+            List of arrays of the raster's pixels
+        """
+
+        gdal = self._gdal_check()
+        dataset = gdal.Open(raster_url)
+        img_arrays = []
+        for band_index in range(dataset.RasterCount):
+            band = dataset.GetRasterBand(band_index + 1)
+            band_as_array = band.ReadAsArray(xoff, yoff, width, height)
+            img_arrays.append(band_as_array)
+        return img_arrays
+
+    def download_raster_array(self, raster_array, outputpath):
+        """
+        Download a rasterized image from a raster array
+        Args:
+            raster_array (list(list)) = Generated raster array
+            outputpath (string) = Desired outputpath for the rasterized image including file extension
+        Returns:
+            Success message
+        """
+
+        img = np.dstack((raster_array[0], raster_array[1], raster_array[2]))
+        matplotlib.image.imsave(outputpath, img)
+        return "Raster image saved in {}".format(outputpath)
 
 class VectorAnalytics:
     def __init__(self, auth: Auth):
@@ -76,39 +181,60 @@ class VectorAnalytics:
         self.token = self.auth.refresh_token()
         self.authorization = {"Authorization": f"Bearer {self.token}"}
 
-    def search(self, layers:str,bbox=None, srsname="EPSG:4326", filter=None, shapefile=False, csv=False, ):
+    def search(self, layers:str,bbox=None, srsname="EPSG:3857", filter=None, shapefile=False, csv=False):
         """
         Function searches using the wfs method.
 
         Args:
+            layers (string) = Desired vector data layer
             bbox: Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)
-            srsname: Desired projection. Defaults to EPSG:4326
+            srsname: Desired projection. Defaults to EPSG:3857. NOTE:(WFS for vector data currently only supports EPSG:3857)
             filter: CQL filter used to refine data of search.
             shapefile: (Default False) Binary of whether to return as shapefile format
             csv: (Default False) Binary of whether to return as a csv format
-        Keyword Args:
-            featureprofile: The desired stacking profile. Defaults to account Default
-            typename: The typename of the desired feature type. Defaults to FinishedFeature
         Returns:
             Response is either a list of features or a shapefile of all features and associated metadata.
         """
         return self.ogc.search(bbox,srsname,filter,shapefile,csv,typename=layers)
 
-    def get_vector_analytics(self, layers:str,bbox=None, srsname="EPSG:4326", height=None, width=None, format = "vnd.jpeg-png",outputpath=None,display=False):
+    def get_vector_analytics(self, layers:str,bbox=None, srsname="EPSG:4326", height=None, width=None,
+                             format="vnd.jpeg-png", outputpath=None, display=False, **kwargs):
         """
         Function downloads the image using the wms method.
 
         Args:
-            bbox: Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)
-            srsname: Desired projection. Defaults to EPSG:4326
-            height: The vertical number of pixels to return. Defaults to 512
-            width: The horizontal number of pixels to return. Defaults to 512
-            img_format: The format of the response image either jpeg, png or geotiff
-            download: User option to download band manipulation file locally. Default True
-            outputpath: Output path must include output format. Downloaded path default is user home path.
-            display: Display image in IDE (Jupyter Notebooks only). Default False
+            layers (string) = Desired vector layer
+            bbox (string) = Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)
+            srsname (string) = Desired projection. Defaults to EPSG:4326
+            height (int) = The vertical number of pixels to return. Defaults to 512
+            width (int) = The horizontal number of pixels to return. Defaults to 512
+            img_format (string) = The format of the response image either jpeg, png or geotiff
+            outputpath (string) = Output path must include output format. Downloaded path default is user home path.
+            display (bool) = Display image in IDE (Jupyter Notebooks only). Default False
         Returns:
-            requests response object or downloaded file path
+            Downloaded file path
         """
-        return self.ogc.download_image_by_pixel_count(bbox=bbox,height=height,width=width,srsname=srsname,img_format=format,outputpath=outputpath,display=display, layers=layers)
+
+        return self.ogc.download_image_by_pixel_count(bbox=bbox, height=height, width=width, srsname=srsname,
+                                                      img_format=format, outputpath=outputpath, display=display,
+                                                      layers=layers, **kwargs)
         #return self.ogc.wms.return_image(bbox=bbox, srsname=srsname, height=height, width=width, format=format, layers=layers)
+
+
+    def get_vector_tiles(self, layers:str, zoom_level, bbox=None, srsname="EPSG:4326", outputpath=None, display=False):
+        """
+        Function downloads vector imagery using the wmts method
+
+        Args:
+            layers (string) = Desired vector layer
+            zoom_level (int) = The desired zoom level
+            bbox (string) = Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)
+            srsname (string) = Desired projection. Defaults to EPSG:4326
+            outputpath (string) = Output path must include output format. Downloaded path default is user home path.
+            display (bool) = Display image in IDE (Jupyter Notebooks only). Default False
+        Returns:
+            Downloaded file path
+        """
+
+        return self.ogc.download_tiles(bbox=bbox, zoom_level=zoom_level, srsname=srsname, img_format='png',
+                                       outputpath=outputpath, display=display, layers=layers)

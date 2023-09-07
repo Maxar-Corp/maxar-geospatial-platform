@@ -35,7 +35,7 @@ class Interface:
             JSON response
         """
 
-        return self.pipelines.post_order_or_get_estimate(namespace, name, settings, output_config, 'order', metadata, **kwargs)
+        return self.pipelines.post_order_or_get_estimate(namespace, name, settings, output_config, metadata, **kwargs)
 
     def cancel_order(self, order_id: str):
         """
@@ -110,7 +110,7 @@ class Interface:
             JSON response
         """
 
-        return self.pipelines.post_order_or_get_estimate(namespace, name, settings, output_config, 'estimate', metadata, **kwargs)
+        return self.pipelines.post_order_or_get_estimate(namespace, name, settings, output_config, metadata, endpoint= 'estimate', **kwargs)
 
     def get_order_events(self, order_id: str, **kwargs):
         """

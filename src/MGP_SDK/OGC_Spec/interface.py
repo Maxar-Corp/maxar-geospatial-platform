@@ -44,8 +44,6 @@ class OgcInterface:
             Response is either a list of features or a shapefile of all features and associated metadata.
         """
 
-        # if filter:
-        #     process.cql_checker(filter)
         if shapefile:
             result = self.wfs.search(bbox=bbox, filter=filter, srsname=srsname, outputformat='shape-zip', **kwargs)
             if 'download_path' in kwargs.keys():
@@ -109,9 +107,8 @@ class OgcInterface:
             if not bbox:
                 raise Exception('zoom_level must have a bbox')
             else:
-                process._validate_bbox(bbox, srsname=srsname)
-                wmts_list = self.wmts.wmts_bbox_get_tile_list(zoom_level, bbox, crs=srsname)
-                return wmts_list
+                wmts_download = self.download_tiles(bbox=bbox,zoom_level=zoom_level,srsname=srsname,img_format=img_format,outputpath=outputpath,display=display)
+                return wmts_download
         else:
             if not bbox or not img_format or not width or not height:
                 raise Exception('height/width must have a bbox and an img_format')
@@ -160,7 +157,7 @@ class OgcInterface:
         # TODO determine browse image functionality from new MGP Xpress
         return
 
-    def get_tile_list_with_zoom(self, bbox, zoom_level, srsname="EPSG:4326"):
+    def get_tile_list_with_zoom(self, bbox, zoom_level, srsname="EPSG:4326", **kwargs):
         """
         Function acquires a list of tile calls dependent on the desired bbox and zoom level
         Args:
@@ -172,10 +169,10 @@ class OgcInterface:
         """
 
         process._validate_bbox(bbox, srsname=srsname)
-        wmts_list = self.wmts.wmts_bbox_get_tile_list(zoom_level, bbox, crs=srsname)
+        wmts_list = self.wmts.wmts_bbox_get_tile_list(zoom_level, bbox, crs=srsname, **kwargs)
         return wmts_list
 
-    def download_tiles(self, bbox, zoom_level, srsname="EPSG:4326", img_format='jpeg', outputpath=None, display=False):
+    def download_tiles(self, bbox, zoom_level, srsname="EPSG:4326", img_format='jpeg', outputpath=None, display=False, **kwargs):
         """
         Function downloads all tiles within a bbox dependent on zoom level
         Args:
@@ -190,7 +187,7 @@ class OgcInterface:
         """
 
         process._check_image_format(img_format)
-        wmts = self.get_tile_list_with_zoom(bbox, zoom_level, srsname=srsname)[1]
+        wmts = self.get_tile_list_with_zoom(bbox, zoom_level, srsname=srsname, img_format=img_format, **kwargs)[1]
         if outputpath:
             extension = outputpath.split(".")[-1]
             base_file = outputpath.replace("." + extension, "")
@@ -198,7 +195,7 @@ class OgcInterface:
             extension = img_format
             base_file = os.getcwd() + "\\Download"
         for tile in wmts:
-            response = self.wmts.wmts_get_tile(tile[0], tile[1], tile[2])
+            response = self.wmts.wmts_get_tile(tile[0], tile[1], tile[2], **kwargs)
             if display:
                 process._display_image(response)
             filename = "{}_{}_{}_{}.{}".format(base_file, tile[0], tile[1], tile[2], extension)
@@ -318,7 +315,7 @@ class OgcInterface:
         sub_querystring = self.wms.querystring
         sub_querystring['width'] = 1024
         sub_querystring['height'] = 1024
-        sub_querystring['coverage_cql_filter'] = "featureId='{}'".format(featureid)
+        sub_querystring['cql_filter'] = "featureId='{}'".format(featureid)
         if 'image_format' in kwargs.keys():
             format = kwargs['image_format']
             sub_querystring['format'] = 'image/{}'.format(format)
@@ -329,7 +326,7 @@ class OgcInterface:
         sub_querystring = self.wms.querystring
         sub_querystring['width'] = img_size
         sub_querystring['height'] = img_size
-        sub_querystring['coverage_cql_filter'] = "featureId='{}'".format(featureid)
+        sub_querystring['cql_filter'] = "featureId='{}'".format(featureid)
         if 'image_format' in kwargs.keys():
             format = kwargs['image_format']
             sub_querystring['format'] = 'image/{}'.format(format)
@@ -512,7 +509,7 @@ class OgcInterface:
         sub_querystring['crs'] = srsname
         sub_querystring['width'] = 1024
         sub_querystring['height'] = 1024
-        sub_querystring['coverage_cql_filter'] = "featureId='{}'".format(featureid)
+        sub_querystring['cql_filter'] = "featureId='{}'".format(featureid)
         if 'image_format' in kwargs.keys():
             format = kwargs['image_format']
             sub_querystring['format'] = 'image/{}'.format(format)

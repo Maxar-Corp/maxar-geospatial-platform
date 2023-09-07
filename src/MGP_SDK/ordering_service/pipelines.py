@@ -41,8 +41,7 @@ class Pipelines:
         process._response_handler(response)
         return response.json()
 
-    def post_order_or_get_estimate(self, namespace: str, name: str, settings: dict, output_config: dict, endpoint: str,
-                                   metadata: dict, **kwargs):
+    def post_order_or_get_estimate(self, namespace: str, name: str, settings: dict, output_config: dict, metadata: dict, endpoint: str, **kwargs):
         """
         Place an order or validate an order request before placing it
         Args:

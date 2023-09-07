@@ -29,10 +29,10 @@ Config File
 
 We recommend creating a credentials file to store your login information for future sessions in one of two ways. 
 
-* Use the command line interface command ``config`` from the command prompt and follow the prompts. See [Command Line Interface](cli_commands.md)
+* Use the command line interface command ``config`` from the command prompt and follow the prompts. See [Command Line Interface](CLI Commands/cli_commands.md)
 * Create a credentials file called ``.MGP-config`` in your home directory with the following format:
 
-			[mps] 
+			[mgp] 
 			user_name=<your-user-name>
 			user_password=<your-password>
 			client_id=<your-client-name>

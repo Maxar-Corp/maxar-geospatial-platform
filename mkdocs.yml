@@ -52,8 +52,16 @@ nav:
         - 'ordering-service/Ordering.md'
     - Tasking:
         - 'tasking-service/Tasking.md'
-    - Misc:
-        - 'cli_commands.md'
+    - CLI Commands:
+        - 'CLI Commands/cli_commands.md'
+        - 'CLI Commands/account_service_cli.md'
+        - 'CLI Commands/discovery_service_cli.md'
+        - 'CLI Commands/monitor_service_cli.md'
+        - 'CLI Commands/order_service_cli.md'
+        - 'CLI Commands/streaming_cli.md'
+        - 'CLI Commands/tasking_service_cli.md'
+        - 'CLI Commands/token_service_cli.md'
+        - 'CLI Commands/usage_service_cli.md'
 #    - Maxar QGIS Plugin:
 #        - Maxar Portal Connect: 'MaxarPortalConnect/index.md'
 #        - Log In: 'MaxarPortalConnect/Log_In.md'

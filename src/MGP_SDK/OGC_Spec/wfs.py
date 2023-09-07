@@ -5,9 +5,9 @@ import requests
 
 def _combine_bbox_and_filter(querystring, filter, bbox, endpoint):
     geometry = ''
-    if endpoint == 'streaming':
+    if endpoint == 'streaming' or endpoint == 'basemaps_ogc':
         geometry = 'featureGeometry'
-    elif endpoint == 'basemaps':
+    elif endpoint == 'basemaps_seamlines':
         geometry = 'seamline_geometry'
     # TODO handle raster / vector
     bbox_geometry = f'BBOX({geometry},{bbox})'
@@ -25,8 +25,10 @@ class WFS:
         self.endpoint = endpoint
         if self.endpoint == 'streaming':
             self.base_url = f'{self.auth.api_base_url}/streaming/{self.api_version}/ogc/wfs'
-        elif self.endpoint == 'basemaps':
+        elif self.endpoint == 'basemaps_seamlines':
             self.base_url = f'{self.auth.api_base_url}/basemaps/{self.api_version}/seamlines/wfs'
+        elif self.endpoint == 'basemaps_ogc':
+            self.base_url = f'{self.auth.api_base_url}/basemaps/{self.api_version}/ogc/wfs'
         elif self.endpoint == 'vector':
             self.base_url = f'{self.auth.api_base_url}/analytics/{self.api_version}/vector/change-detection/Maxar/ows'
         # TODO Handle raster endpoint
@@ -52,6 +54,7 @@ class WFS:
         querystring = self._init_querystring(typename)
         keys = list(kwargs.keys())
         if 'filter' in keys and kwargs['filter']:
+            process.cql_checker(kwargs['filter'])
             if 'bbox' in keys and kwargs['bbox']:
                 if srsname == "EPSG:4326":
                     process._validate_bbox(kwargs['bbox'], srsname=srsname)
@@ -99,9 +102,9 @@ class WFS:
 
     def _init_querystring(self, typename):
         if typename is None:
-            if self.endpoint == 'streaming':
+            if self.endpoint == 'streaming' or self.endpoint == 'basemaps_ogc':
                 typename = 'Maxar:FinishedFeature'
-            elif self.endpoint == 'basemaps':
+            elif self.endpoint == 'basemaps_seamlines':
                 typename = 'seamline'
             # TODO Handle raster / vector
         querystring = {
