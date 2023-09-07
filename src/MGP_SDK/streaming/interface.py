@@ -34,9 +34,8 @@ class Interface:
         return self.ogc.search(bbox, srsname, filter, shapefile, csv, **kwargs)
 
     def download_image(self, bbox: str = None, srsname: str = "EPSG:4326", height: int = 512, width: int = 512,
-                       img_format: str = 'jpeg', identifier: str = None, gridoffsets: str = None,
-                       zoom_level: int = None, download: bool = True, outputpath: str = None, display: bool = False,
-                       **kwargs):
+                       img_format: str = 'jpeg', zoom_level: int = None, download: bool = True, outputpath: str = None,
+                       display: bool = False, **kwargs):
         """
         Function downloads the image using the wms method.
 
@@ -64,7 +63,7 @@ class Interface:
         # TODO determine browse image functionality from new MGP Xpress
         return
 
-    def get_tile_list_with_zoom(self, bbox: str, zoom_level: int, srsname: str = "EPSG:4326"):
+    def get_tile_list_with_zoom(self, bbox: str, zoom_level: int, srsname: str = "EPSG:4326", **kwargs):
         """
         Function acquires a list of tile calls dependent on the desired bbox and zoom level
 
@@ -76,10 +75,10 @@ class Interface:
             List of individual tile calls for desired bbox and zoom level
         """
 
-        return self.ogc.get_tile_list_with_zoom(bbox, zoom_level, srsname)
+        return self.ogc.get_tile_list_with_zoom(bbox, zoom_level, srsname, **kwargs)
 
     def download_tiles(self, bbox: str, zoom_level: int, srsname: str = "EPSG:4326", img_format: str = 'jpeg',
-                       outputpath: bool = None, display: bool = False):
+                       outputpath: bool = None, display: bool = False, **kwargs):
         """
         Function downloads all tiles within a bbox dependent on zoom level
 
@@ -94,7 +93,7 @@ class Interface:
             Message displaying success and location of downloaded tiles
         """
 
-        return self.ogc.download_tiles(bbox, zoom_level, srsname, img_format, outputpath, display)
+        return self.ogc.download_tiles(bbox, zoom_level, srsname, img_format, outputpath, display, **kwargs)
 
     def download_image_with_feature_id(self, bbox: str, identifier: str, gridoffsets: str, srsname: str = "EPSG:4326",
                                        img_format: str = 'jpeg', display: bool = True, outputpath: str = None):
@@ -199,7 +198,7 @@ class Interface:
             None
         """
         # TODO Determine best use case for seamline streaming
-        # return self.ogc.create_mosaic(base_dir, img_format, img_size, **kwargs)
+        return self.ogc.create_mosaic(base_dir, img_format, img_size, **kwargs)
 
     def calculate_sqkm(self, bbox: str):
         """

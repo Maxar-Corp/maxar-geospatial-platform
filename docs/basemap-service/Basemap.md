@@ -1,14 +1,10 @@
 # Basemaps
 <hr>
 
-The Streaming Basemaps API enables streaming of the Vivid imagery basemaps and associated product and source image metadata using 
-OGC services, including WMS, WMTS, and WFS. Maxar hosts the suite of Vivid basemaps and makes available the most recent 
-version of each basemap as updates are available. For more information on the Vivid imagery basemap products (Vivid 
-Basic, Vivid Standard, Vivid Advanced, and Vivid Premium) refer to the applicable product specification.
+The Streaming Basemaps API enables streaming of the Vivid imagery basemaps and associated product and source image metadata using OGC services, including WMS, WMTS, and WFS. Maxar hosts the suite of Vivid basemaps and makes available the most recent version of each basemap as updates are available. For more information on the Vivid imagery basemap products (Vivid Basic, Vivid Standard, Vivid Advanced, and Vivid Premium) refer to the applicable product specification.
 
 Streaming basemaps is done for areas of interest by specifying the location parameters for the desired image tiles. 
-Streaming is available for a single tile or the entire product coverage area. For more information on 
-[OGC](https://www.ogc.org/standards/)
+Streaming is available for a single tile or the entire product coverage area. For more information on [OGC](https://www.ogc.org/standards/)
 
 ### Getting Started: 
 ```python
@@ -24,6 +20,8 @@ basemaps = Interface().basemap_service
 - [Search](#search--search)
 - [Download Image](#download-image--download_image)
 - [Get Tile List With Zoom](#get-tile-list-with-zoom--get_tile_list_with_zoom)
+- [Download Tiles](#download-tiles--download_tiles)
+- [Download Image By Pixel Count](#download-image-by-pixel-count--download_image_by_pixel_count)
 
 
 ## Basemaps
@@ -46,7 +44,7 @@ basemap_details = basemaps.get_basemap_details('92079771-d0b8-4b5c-aecd-1853a6d5
 print(basemap_details)
 ```
 
-## Streaming Seamlines
+## Streaming Basemaps
 
 ### Search / search()
 Function searches using the wfs method<br>
@@ -57,26 +55,27 @@ Args:<br>
 **filter**: (string) Default=None, CQL filter used to refine data of search<br>
 **shapefile**: (bool) Default=False, Binary of whether or not to return as shapefile format<br>
 **csv**: (bool) Default=False, Binary of whether or not to return as a csv format<br>
+**seamlines**: Default=False, Binary of whether to return the information utilizing the seamlines layer<br>
 Keyword Arguments:<br>
 **request**: Defaults to GetFeature. options: DescribeFeatureType, GetCapabilities<br>
 **featureprofile**: (string) The desired stacking profile. Defaults to account Default<br>
-**typename**: (string) The typename of the desired feature type. Defaults to seamline<br>
+**typename**: (string) Defaults to FinishedFeature. The typename of the desired feature type<br>
 Any additional API parameters can be passed as a keyword argument<br>
 ### Get Feature:
 ```python
-features = seamline.search(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857', 
-                            filter="product_name='VIVID_STANDARD_30'")
+features = basemaps.search(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857', 
+                            filter="productName='VIVID_STANDARD_30'")
 print(features)
 ```
 ### Get Capabilities:
 ```python
-capabilities = seamline.search(request='getCapabilities')
+capabilities = basemaps.search(request='getCapabilities')
 print(capabilities)
 ```
 
 ### Describe Feature Type:
 ```python
-featureType = seamline.search(request='DescribeFeatureType')
+featureType = basemaps.search(request='DescribeFeatureType')
 print(features)
 ```
 ### Download Image / download_image()
@@ -92,27 +91,28 @@ Args:<br>
 **download**: Default=True, User option to download image file locally. Default True<br>
 **outputpath**: Default=None, Output path must include output format. Downloaded path default is user home path.<br>
 **display**: Default=False, Display image in IDE (Jupyter Notebooks only). Default False<br>
+**seamlines**: Default=False, Binary of whether to return the information utilizing the seamlines layer<br>
 Keyword Arguments:<br>
 **legacyid**: (string) The duc id to download the browse image<br>
-**layers**: Defaults to Maxar:seamline. Options: Maxar:Imagery<br>
+**layers**: Options: Maxar:Imagery, seamline<br>
 **request**: Defaults to GetMap. options: GetCapabilities<br>
 
-### Get a seamline map:
+### Get a basemap:
 ```python
-image = seamline.download_image(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857',
+image = basemaps.download_image(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857',
                                 filter="productName='VIVID_STANDARD_30'", height=1024, width=1024, img_format='png')
 ```
 
 ### Get a vivid map:
 ```python
-image = seamline.download_image(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857',
+image = basemaps.download_image(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857',
                                 filter="productName='VIVID_STANDARD_30'", layers='Maxar:Imagery', height=1024, 
                                 width=1024, img_format='vnd.jpeg-png')
 ```
 
 ### Get Capabilities
 ```python
-capabilities = seamline.download_image(request='GetCapabilities')
+capabilities = basemaps.download_image(request='GetCapabilities')
 ```
 
 
@@ -123,10 +123,11 @@ Args:<br>
 **bbox**: Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)<br>
 **zoom_level**: The zoom level<br>
 **srsname**: Default=EPSG:4326, Desired projection<br>
+**seamlines**: Default=False, Binary of whether to return the information utilizing the seamlines layer<br>
 ```python
-tile_list = streaming.get_tile_list_with_zoom(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', 
+tile_list = basemaps.get_tile_list_with_zoom(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', 
                                               srsname='EPSG:3857', zoom_level=8, 
-                                              filter="product_name='VIVD_STANDARD_30'")
+                                              filter="productName='VIVD_STANDARD_30'")
 print(tile_list)
 ```
 
@@ -140,9 +141,24 @@ Args:<br>
 **img_format**: Default=jpeg, The format of the response image either jpeg, png or geotiff<br>
 **outputpath**: Default=None, Output path must include output format. Downloaded path default is user home path.<br>
 **display**: Default=False, Display image in IDE (Jupyter Notebooks only)<br>
+**seamlines**: Default=False, Binary of whether to return the information utilizing the seamlines layer<br>
 ```python
-streaming.download_tiles(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857', 
-                         zoom_level=8, img_format='geotiff', filter="product_name='VIVD_STANDARD_30'")
+basemaps.download_tiles(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857', 
+                         zoom_level=8, img_format='geotiff', filter="productName='VIVD_STANDARD_30'")
 ```
 
-
+### Download Image By Pixel Count / download_image_by_pixel_count()
+Function downloads an image within a given AOI<br>
+**Returns**: Message displaying success and location of downloaded tiles<br>
+Args:<br>
+**bbox**: Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)<br>
+**height**: Default=512, The vertical number of pixels to return<br>
+**width**: Default=512, The horizontal number of pixels to return<br>
+**srsname**: Default=EPSG:4326, Desired projection<br>
+**img_format**: Default=jpeg, The format of the response image either jpeg, png or geotiff<br>
+**outputpath**: Default=None, Output path must include output format. Downloaded path default is user home path.<br>
+**display**: Default=False, Display image in IDE (Jupyter Notebooks only)<br>
+**seamlines**: Default=False, Binary of whether to return the information utilizing the seamlines layer<br>
+```python
+basemaps.download_image_by_pixel_count(bbox='4828743.9944,-11689315.9992,4831803.1702,-11685446.3746', srsname='EPSG:3857', height=256, width=256, filter="productName='VIVID_STANDARD_30'")
+```

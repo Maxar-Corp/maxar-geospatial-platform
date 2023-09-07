@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from pyproj import Transformer
 import shapely.ops as ops
@@ -11,6 +12,7 @@ import queue
 from concurrent.futures import ThreadPoolExecutor
 from MGP_SDK.auth import auth
 from datetime import datetime
+from shapely.validation import make_valid
 
 
 def authorization(auth_class=None):
@@ -215,6 +217,7 @@ def aoi_coverage(bbox, response):
     Returns:
         Updated dictionary of the json object
     """
+
     coverage = response.json()
     box_order = bbox.split(',')
     aoi_polygon = shapely.geometry.box(
@@ -223,12 +226,14 @@ def aoi_coverage(bbox, response):
         if feature['geometry']['type'] == 'Polygon':
             feature_wkt = shapely.wkt.loads("POLYGON (({}))".format(
                 ", ".join([" ".join([str(k) for k in i]) for i in feature['geometry']['coordinates'][0]])))
+            feature_wkt = make_valid(feature_wkt)
             feature['coverage'] = aoi_polygon.intersection(feature_wkt).area / feature_wkt.area
             feature['bbox_coverage'] = feature_wkt.intersection(aoi_polygon).area / aoi_polygon.area
         else:
             feature_wkt = shapely.wkt.loads("MULTIPOLYGON ({})".format(", ".join(
                 ["(({}))".format(", ".join([" ".join([str(k) for k in i]) for i in l[0]])) for l in
                  feature['geometry']['coordinates']])))
+            feature_wkt = make_valid(feature_wkt)
             feature['coverage'] = aoi_polygon.intersection(feature_wkt).area / feature_wkt.area
             feature['bbox_coverage'] = feature_wkt.intersection(aoi_polygon).area / aoi_polygon.area
     return coverage
@@ -261,26 +266,24 @@ def cql_checker(cql_filter):
     Args:
         cql_filter (string) = Representation of cql filter
     """
-    string_list = ['featureId', 'sourceUnit', 'productType', 'groundSampleDistanceUnit', 'dataLayer',
-                   'product_line_item',
-                   'legacyDescription', 'colorBandOrder', 'assetName', 'assetType', 'legacyId',
-                   'factoryOrderNumber', 'layer', 'crs', 'url', 'spatialAccuracy', 'catalogIdentifier',
-                   'tileMatrixSet', 'tileMatrix', 'product_name', 'product_id', 'bandDescription',
-                   'bandConfiguration', 'fullResolutionInitiatedOrder', 'legacyIdentifier', 'processingLevel',
-                   'companyName', 'orbitDirection', 'beamMode', 'polarisationMode', 'polarisationChannel',
-                   'antennaLookDirection', 'md5Hash', 'licenseType', 'ceCategory', 'deletedReason', 'productName',
-                   'bucketName', 'path', 'sensorType', 'product_name', 'VIVID_STANDARD_30']
-    string_date_list = ['acquisitionDate', 'ingestDate', 'collect_date_min', 'createdDate', 'earliestAcquisitionTime',
-                        'latestAcquisitionTime', 'lastModifiedDate', 'deletedDate', 'acq_time_earliest']
-    float_list = ['resolutionX', 'resolutionY', 'minimumIncidenceAngle', 'maximumIncidenceAngle',
-                   'incidenceAngleVariation', 'niirs', 'ce90Accuracy',
-                   'groundSampleDistance', 'perPixelX', 'perPixelY', 'CE90Accuracy', 'RMSEAccuracy']
-    boolean_list = ['isEnvelopeGeometry', 'isMultiPart', 'hasCloudlessGeometry']
-    integer_list = ['usageProductId']
-    source_list = ["'WV01'", "'WV02'", "'WV03_VNIR'", "'WV03'", "'WV04'", "'GE01'", "'QB02'", "'KS3'", "'KS3A'", "'WV03_SWIR'", "'KS5'",
-                   "'RS2'", "'IK02'", "'LG01'", "'LG02'"]
-    _0_360_list = ['sunAzimuth', 'offNadirAngle', 'sunElevation']
-    _0_1_list = ['cloudCover']
+    string_list = ["featureId", "groundSampleDistanceUnit", "source", "bandDescription", "dataLayer",
+                   "legacyDescription", "bandConfiguration", "fullResolutionInitiatedOrder", "legacyIdentifier",
+                   "crs" "processingLevel", "companyName", "orbitDirection", "beamMode", "polarisationMode",
+                   "polarisationChannel", "antennaLookDirection", "md5Hash", "licenseType", "ceCategory",
+                   "deletedReason", "productName", "bucketName", "path", "sensorType", "sensor", "vehicle_name",
+                   "product_name", "catid", "block_name", "uuid", "geohash_6", "cam", "change_type", "context",
+                   "subregion", "geocell", "product"]
+    string_date_list = ["acquisitionDate", "createdDate", "earliestAcquisitionTime", "latestAcquisitionTime",
+                        "lastModifiedDate", "deletedDate", "create_date", "acq_time_earliest", "acq_time_latest",
+                        "acq_time", "change_timestamp", "version_timestamp"]
+    float_list = ["groundSampleDistance", "resolutionX", "resolutionY", "niirs", "ce90Accuracy", "gsd", "accuracy"]
+    boolean_list = ["isEnvelopeGeometry", "isMultiPart", "hasCloudlessGeometry", "active"]
+    integer_list = ["usageProductId", "change_area_size_sqm"]
+    source_list = ["'WV01'", "'WV02'", "'WV03_VNIR'", "'WV03'", "'WV04'", "'GE01'", "'QB02'", "'KS3'", "'KS3A'",
+                   "'WV03_SWIR'", "'KS5'", "'RS2'", "'IK02'", "'LG01'", "'LG02'"]
+    _0_360_list = ["sunAzimuth", "sunElevation", "offNadirAngle", "minimumIncidenceAngle", "maximumIncidenceAngle",
+                   "incidenceAngleVariation", "ona", "ona_avg", "sunel_avg", "sun_az_avg", "target_az_avg"]
+    _0_1_list = ["cloudCover"]
     error_list = []
     if cql_filter is None:
         error_list.append('filter can not be None type')
@@ -357,7 +360,7 @@ def cql_checker(cql_filter):
         else:
             error_list.append(f'{key, value} Not a valid parameter')
     if len(error_list) > 0:
-        raise Exception('CQL Filter Error:', error_list)
+        print('CQL Filter Error:' + ", ".join(error_list))
 
 
 

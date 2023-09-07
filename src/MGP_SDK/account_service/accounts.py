@@ -28,7 +28,7 @@ class Info:
             raise Exception("No search results for {}. Please try another search term".format(search))
         return response.json()
 
-    def get_accounts(self, account_id=None, account_name=None, id_names=False, types=False):
+    def get_accounts(self, account_id=None, account_name=None, id_names=False, types=False, **kwargs):
         """
         Function lists a single account, a list of accounts, or account types and their details
         Args:
@@ -51,7 +51,10 @@ class Info:
             url = self.base_url + '/account-service/api/v1/accounts/types'
         else:
             url = self.base_url + '/account-service/api/v1/accounts'
-        response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
+        params = {}
+        for key, value in kwargs.items():
+            params[key] = value
+        response = requests.request("GET", url, headers=authorization, params=params, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
 

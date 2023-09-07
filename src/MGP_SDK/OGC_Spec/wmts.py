@@ -14,8 +14,12 @@ class WMTS:
         self.endpoint = endpoint
         if self.endpoint == 'streaming':
             self.base_url = f'{self.auth.api_base_url}/streaming/{self.api_version}/ogc/gwc/service/wmts'
-        elif self.endpoint == 'basemaps':
+        elif self.endpoint == 'basemaps_seamlines':
             self.base_url = f'{self.auth.api_base_url}/basemaps/{self.api_version}/seamlines/gwc/service/wmts'
+        elif self.endpoint == 'basemaps_ogc':
+            self.base_url = f'{self.auth.api_base_url}/basemaps/{self.api_version}/ogc/gwc/service/wmts'
+        elif self.endpoint == 'vector':
+            self.base_url = f'{self.auth.api_base_url}/analytics/{self.api_version}/vector/change-detection/Maxar/gwc/service/wmts'
         # TODO handle raster / vector
         self.token = self.auth.refresh_token()
         self.authorization = {"Authorization": f"Bearer {self.token}"}
@@ -60,7 +64,7 @@ class WMTS:
             transformer = Transformer.from_crs(crs, "EPSG:4326")
             x2, y2 = transformer.transform(longx, laty)
 
-            def deg2num(lat_deg, lon_deg, zoom):
+            def deg2num(lon_deg, lat_deg, zoom):
                 lat_rad = math.radians(lat_deg)
                 n = 2.0 ** zoom
                 xtile = int((lon_deg + 180.0) / 360.0 * n)
@@ -83,12 +87,17 @@ class WMTS:
 
         token = self.auth.refresh_token()
         authorization = {'Authorization': 'Bearer {}'.format(token)}
-
+        if 'filter' in kwargs.keys():
+            process.cql_checker(kwargs['filter'])
         querystring = self.querystring
         querystring['TileMatrix'] = querystring['tileMatrixSet'] + ':' + str(zoom_level)
-        querystring['tilerow'] = tilerow
-        querystring['tilecol'] = tilecol
+        querystring['TileRow'] = tilerow
+        querystring['TileCol'] = tilecol
         querystring['request'] = 'GetTile'
+        if 'layers' in kwargs.keys():
+            querystring['Layer'] = kwargs['layers']
+        if 'filter' in kwargs.keys():
+            querystring['cql_filter'] = kwargs['filter']
         response = requests.request("GET", self.base_url, headers=authorization, params=self.querystring, verify=self.auth.SSL)
         process_response = process._response_handler(response)
         return process_response
@@ -105,6 +114,8 @@ class WMTS:
         """
 
         process._validate_bbox(bbox, srsname=crs)
+        if filter in kwargs.keys():
+            process.cql_checker(kwargs['filter'])
         bbox_list = [i for i in bbox.split(',')]
         miny = float(bbox_list[0])
         minx = float(bbox_list[1])
@@ -128,6 +139,9 @@ class WMTS:
         for i in range(int(min_tilecol), int(max_tilecol) + 1):
             for j in range(int(min_tilerow), int(max_tilerow) + 1):
                 querystring = self.querystring
+                for item in kwargs.keys():
+                    if item == 'img_format':
+                        querystring['Format'] = 'image/' + kwargs['img_format']
                 querystring['request'] = 'GetTile'
                 querystring['tileMatrixSet'] = crs
                 querystring['TileMatrix'] = querystring['tileMatrixSet'] + ':' + str(zoom_level)
@@ -140,9 +154,9 @@ class WMTS:
 
     def _init_querystring(self):
         typename = ''
-        if self.endpoint == 'streaming':
+        if self.endpoint == 'streaming' or self.endpoint == 'basemaps_ogc':
             typename = 'Maxar:Imagery'
-        elif self.endpoint == 'basemaps':
+        elif self.endpoint == 'basemaps_seamlines':
             typename = 'Maxar:seamline'
         # TODO handle raster / vector
         querystring = {

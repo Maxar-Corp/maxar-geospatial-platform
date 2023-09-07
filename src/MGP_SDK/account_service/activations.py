@@ -28,7 +28,7 @@ class Activations:
             raise Exception("No search results for {}. Please try another search term".format(search))
         return response.json()
 
-    def get_activations(self, activation_id=None, activation_number=None):
+    def get_activations(self, activation_id=None, activation_number=None, **kwargs):
         """
         Get all activations or activation by Id.
         Args:
@@ -45,7 +45,10 @@ class Activations:
             url = self.base_url + '/account-service/api/v1/activations/number/{}'.format(activation_number)
         else:
             url = self.base_url + '/account-service/api/v1/activations'
-        response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
+            params = {}
+            for key, value in kwargs.items():
+                params[key] = value
+        response = requests.request("GET", url, headers=authorization, params=params, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
 

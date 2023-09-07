@@ -6,3 +6,4 @@ pillow
 click
 beautifulsoup4
 lxml
+matplotlib

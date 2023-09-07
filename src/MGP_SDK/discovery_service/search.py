@@ -29,7 +29,7 @@ class Search:
             GeoJSON feature collection
         """
 
-        if 'bbox' and 'intersects' in kwargs.keys():
+        if 'bbox' in kwargs.keys() and 'intersects' in kwargs.keys():
             raise Exception('When performing a spatial search specify either "bbox" or "intersects" not both.')
         if 'datetime' in kwargs.keys():
             try:
@@ -49,18 +49,18 @@ class Search:
         response = response.json()
 
         # pagination
-        if "links" in response.keys():
-            is_next = response["links"][0]["rel"] == "next"
-            while is_next:
-                sub_response = requests.get(url, params=params, headers=self.authorization,
-                                            verify=self.auth.SSL)
-                process._response_handler(sub_response)
-                sub_response = sub_response.json()
-                response["features"].append(sub_response["features"])
-                if "links" in sub_response.keys():
-                    is_next = sub_response["links"][0]["rel"] == "next"
-                    params.clear()
-                    url = sub_response["links"][0]["href"]
-                else:
-                    is_next = False
+        # if "links" in response.keys():
+        #     is_next = response["links"][0]["rel"] == "next"
+        #     while is_next:
+        #         sub_response = requests.get(url, params=params, headers=self.authorization,
+        #                                     verify=self.auth.SSL)
+        #         process._response_handler(sub_response)
+        #         sub_response = sub_response.json()
+        #         response["features"].append(sub_response["features"])
+        #         if "links" in sub_response.keys():
+        #             is_next = sub_response["links"][0]["rel"] == "next"
+        #             params.clear()
+        #             url = sub_response["links"][0]["href"]
+        #         else:
+        #             is_next = False
         return response

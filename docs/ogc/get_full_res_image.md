@@ -68,7 +68,7 @@
 
   If `mosaic` is set to True, the filename of the mosaiced image, defaults to `merged_image`. Recommended to be used with `outputdirectory` as noted above.
   
-    **Example:**
+   **Example:**
 	
-	  interface.get_full_res_image(featureid='932f7992a4d86a9ca412c024c22792ce', outputdirectory=r'C:\Users\<user>\full_res_directory', filename='My_Mosaic')
+	 interface.get_full_res_image(featureid='932f7992a4d86a9ca412c024c22792ce', outputdirectory=r'C:\Users\<user>\full_res_directory', filename='My_Mosaic')
 	  

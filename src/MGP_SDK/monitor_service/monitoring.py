@@ -34,7 +34,7 @@ class Monitoring:
         """
 
         parameter_list = ['start_datetime', 'end_datetime', 'description', 'aoi_geojson', 'match_criteria',
-                          'monitor_notifications']
+                          'monitor_notifications', 'order_templates']
         if 'start_date' in kwargs.keys():
             try:
                 datetime_string = datetime.fromisoformat(kwargs['start_date'])
@@ -147,13 +147,15 @@ class Monitoring:
                 except:
                     raise Exception("Filter must be a kev value pair separated by a colon (:) " + filter)
         if 'sort' in kwargs.keys():
-            if kwargs['sort'] is not 'asc' or kwargs['sort'] is not 'desc':
+            if kwargs['sort'] != 'asc' and kwargs['sort'] != 'desc':
                 raise Exception('sort must be either asc or desc. ' + kwargs['sort'])
         params = {}
         if 'filter' in kwargs.keys():
             params['filter'] = kwargs['filter']
         if 'sort' in kwargs.keys():
             params['sort'] = kwargs['sort']
+        if 'limit' in kwargs.keys():
+            params['limit'] = kwargs['limit']
         url = f'{self.base_url}/{monitor_id}/events'
         response = requests.get(url, params=params, headers=self.authorization, verify=self.auth.SSL)
         # TODO Handle pagination from response

@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
   name = 'MGP_SDK',
-  version = '1.1.1',
+  version = '1.2.0',
   license='MIT',
   description = 'SDK for interacting with Maxar Geospatial Platform',
   long_description=README,
@@ -28,7 +28,8 @@ setup(
           'pillow',
           'click',
           'beautifulsoup4',
-          'lxml'
+          'lxml',
+          'matplotlib'
       ],
   classifiers=[
     'Development Status :: 5 - Production/Stable',
@@ -39,15 +40,9 @@ setup(
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
   ],
+
   entry_points='''
     [console_scripts]
-    search=MGP_SDK.streaming.cli_commands:search
-    config=MGP_SDK.streaming.cli_commands:config_file
-    password=MGP_SDK.streaming.cli_commands:reset_password
-    download=MGP_SDK.streaming.cli_commands:download
-    area=MGP_SDK.streaming.cli_commands:calculate_bbox_sqkm
-    token=MGP_SDK.token_service.cli_commands:create_token
-    get_token=MGP_SDK.token_service.cli_commands:get_tokens
-    delete_token=MGP_SDK.token_service.cli_commands:delete_tokens
+    mgp = MGP_SDK.cli_commands.cli_commands:cli
     '''
 )

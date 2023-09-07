@@ -30,7 +30,7 @@ class Auth:
         self.client_id = client_id
         self.access = None
         self.refresh = None
-        self.version = "Python1.1.1"
+        self.version = "Python1.2.0"
         self.api_version = 'v1'
         self.SSL = True
 

@@ -1,6 +1,7 @@
 import requests
 import json
 import MGP_SDK.process as process
+import MGP_SDK.account_service.roles as account_roles
 
 
 class Users:
@@ -71,7 +72,7 @@ class Users:
 
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users"
-        payload = self.get_users(userId=user_id)
+        payload = self.get_users(user_id)
         for item in kwargs.keys():
             payload.update({item: kwargs[item]})
         payload = json.dumps(payload)
@@ -118,11 +119,12 @@ class Users:
         process._response_handler(response)
         return response.json()
 
-    def update_user_roles(self, user_id, roles_to_update, delete=False):
+    def update_user_roles(self, user_id, roles_to_update, client_id="b4e8d573-56ee-4e79-abcd-7b161f93ea17", delete=False):
         """
         Args:
             user_id (string) = Identifier of the desired user
             roles_to_update (list(string)) = Desired roles to update
+            client_id (string) = Desired client id
             delete (bool) = Binary value for deletion. Defaults to False
         Returns:
             Dictionary of the updated user roles or response object of the deleted role(s)
@@ -133,9 +135,14 @@ class Users:
             raise Exception('rolesToUpdate must be a list')
 
         #use the roles class to create list of all roles
-        role_list = self.GetUserAvailableRoles(user_id)
+        # role_list = account_roles.Roles.get_roles(self)
+        role_list = self.get_user_available_roles(user_id, client_id)
         # roleList = roleClass.GetRoles()
         role_array = []
+        if delete:
+            action = "REMOVE"
+        else:
+            action = "ADD"
 
         #loop through roles you want to add
         for i in range(len(roles_to_update)):
@@ -143,11 +150,13 @@ class Users:
             for role in role_list:
                 if role['name'] == roles_to_update[i]:
                     id = role['id']
-                    role_array.append({"id": id, "name": role['name']})
+                    role_array.append(
+                        {"id": id, "name": role['name'], "clientContextId": client_id, "actionToExecute": action}
+                    )
 
         #Check if it found all the roles you wanted to add
-        if len(roles_to_update) != len(role_array):
-            raise Exception('One or more selected roles not available for this user.')
+        # if len(roles_to_update) != len(role_array):
+        #     raise Exception('One or more selected roles not available for this user.')
         payload = json.dumps(role_array)
 
         if not delete:
@@ -161,7 +170,8 @@ class Users:
             process._response_handler(response)
             return response
 
-    def get_user_roles(self, user_id):
+
+    def get_user_roles(self, user_id, **kwargs):
         """
         Finds the roles a user has.
         Args:
@@ -172,24 +182,29 @@ class Users:
 
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users/roles/assigned/{}".format(user_id)
-        response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
+        params = {}
+        for key, value in kwargs.items():
+            params[key] = value
+        response = requests.request("GET", url, headers=authorization, params=params, verify=self.auth.SSL)
         process._response_handler(response)
         if response.status_code == 204:
             return {}
         else:
             return response.json()
 
-    def get_user_available_roles(self, user_id):
+    def get_user_available_roles(self, user_id, client_id="b4e8d573-56ee-4e79-abcd-7b161f93ea17"):
         """
         Finds the roles available for a user to have.
         Args:
             user_id (string) = Identifier of the desired user
+            client_id (string) = Desired client id
         Returns:
             Dictionary of the roles and their details that a user has the ability to be assigned
         """
 
         authorization = process.authorization(self.auth)
-        url = self.base_url + "/account-service/api/v1/users/roles/assigned-available/{}".format(user_id)
+        url = self.base_url + "/account-service/api/v1/users/roles/assigned-available/{}?clientContextId={}".format(
+            user_id, client_id)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()

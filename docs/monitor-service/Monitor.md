@@ -15,11 +15,11 @@ monitoring = Interface().monitoring_service
 
 ### Package methods:
 
-- [new_monitor](#create-a-new-monitor--new_monitor)
-- [toggle_monitor_status](#toggle-a-monitors-status--toggle_monitor_status)
-- [get_monitor](#get-a-monitor--get_monitor)
-- [get_monitor_list](#get-a-list-of-monitors--get_monitor_list)
-- [get_monitor_events](#get-monitor-events--get_monitor_events)
+- [Create a New Monitor](#create-a-new-monitor--new_monitor)
+- [Toggle Monitor Status](#toggle-a-monitors-status--toggle_monitor_status)
+- [Get a Monitor](#get-a-monitor--get_monitor)
+- [Get a List of Monitors](#get-a-list-of-monitors--get_monitor_list)
+- [Get Monitor Events](#get-monitor-events--get_monitor_events)
 
 ### Create a new monitor / new_monitor():
 Initiates the creation of a new monitor<br>
@@ -39,7 +39,7 @@ new_monitor = monitoring.new_monitor('discover/catalog', start_datetime='2023-05
 print(new_monitor)
 ```
 
-### Toggle a monitors status / toggle_monitor_status()
+### Toggle a monitor's status / toggle_monitor_status()
 Enables or disables a monitor<br>
 Args:<br>
 **monitor_id**: string, the ID of the monitor<br>

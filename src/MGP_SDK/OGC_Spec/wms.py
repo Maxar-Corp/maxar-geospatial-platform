@@ -11,8 +11,10 @@ class WMS:
         self.endpoint = endpoint
         if self.endpoint == 'streaming':
             self.base_url = f'{self.auth.api_base_url}/streaming/{self.api_version}/ogc/ows'
-        elif self.endpoint == 'basemaps':
+        elif self.endpoint == 'basemaps_seamlines':
             self.base_url = f'{self.auth.api_base_url}/basemaps/{self.api_version}/seamlines/ows'
+        elif self.endpoint == 'basemaps_ogc':
+            self.base_url = f'{self.auth.api_base_url}/basemaps/{self.api_version}/ogc/ows'
         elif self.endpoint == 'vector':
             self.base_url = f'{self.auth.api_base_url}/analytics/{self.api_version}/vector/change-detection/Maxar/ows'
         # TODO Handle raster endpoint
@@ -52,7 +54,7 @@ class WMS:
         else:
             raise Exception('Search function must have a BBOX.')
         if 'filter' in keys:
-            # process.cql_checker(kwargs['filter'])
+            process.cql_checker(kwargs['filter'])
             querystring.update({'cql_filter': kwargs['filter']})
             del (kwargs['filter'])
         if 'request' in keys:
@@ -67,9 +69,9 @@ class WMS:
 
     def _init_querystring(self, layers):
         if layers is None:
-            if self.endpoint == 'streaming':
+            if self.endpoint == 'streaming' or self.endpoint == 'basemaps_ogc':
                 layers = 'Maxar:Imagery'
-            elif self.endpoint == 'basemaps':
+            elif self.endpoint == 'basemaps_seamlines':
                 layers = 'Maxar:seamline'
             # TODO Handle raster / vector
         querystring = {'service': 'WMS',

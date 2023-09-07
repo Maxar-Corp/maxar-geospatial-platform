@@ -42,6 +42,6 @@
 
   The filename of the mosaiced image, defaults to `merged_image`
   
-    **Example:**
+   **Example:**
 	
-	  interface.create_mosaic(base_dir=base_dir, img_size=1024, img_format='png', filename='My_Mosaic')
+	interface.create_mosaic(base_dir=base_dir, img_size=1024, img_format='png', filename='My_Mosaic')
