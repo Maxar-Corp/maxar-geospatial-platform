@@ -55,6 +55,7 @@ nav:
     - CLI Commands:
         - 'CLI Commands/cli_commands.md'
         - 'CLI Commands/account_service_cli.md'
+        - 'CLI Commands/analytics_service_cli.md'
         - 'CLI Commands/discovery_service_cli.md'
         - 'CLI Commands/monitor_service_cli.md'
         - 'CLI Commands/order_service_cli.md'
