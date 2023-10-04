@@ -2003,6 +2003,10 @@ def get_raster_array(raster_url, x_off, y_off, width, height, download, outputpa
 @click.option('--csv', '-c', help='Binary of whether to return as a csv format, Defaults to False', is_flag=True, default=False)
 @click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
 def vector_search(layers, bbox, srsname, filter, shapefile, csv, yes):
+    """
+    Search vector layers
+    """
+
     analytics_interface = _analytics()
     home_dir = os.path.expanduser("~")
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
@@ -2050,9 +2054,13 @@ def vector_search(layers, bbox, srsname, filter, shapefile, csv, yes):
 @click.option('--img_format', '-i', help='The format of the response image either jpeg, png or geotiff')
 @click.option('--outputpath', '-o', help='Output path must include output format. Downloaded path default is '
                                            'user home path', default=None)
-@click.option('--filter', '-f', help='CQL filter used to refine data of search', default=None)
+@click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
 @click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
 def vector_image_download(layers, bbox, srsname, height, width, img_format, outputpath, filter, yes):
+    """
+     Download a vector image
+    """
+
     analytics_interface = _analytics()
     home_dir = os.path.expanduser("~")
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
@@ -2103,6 +2111,10 @@ def vector_image_download(layers, bbox, srsname, height, width, img_format, outp
                                            'user home path', default=None)
 @click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
 def vector_tile_download(layers, zoom, bbox, srsname, outputpath, yes):
+    """
+    Download vector tiles
+    """
+
     analytics_interface = _analytics()
     home_dir = os.path.expanduser("~")
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:

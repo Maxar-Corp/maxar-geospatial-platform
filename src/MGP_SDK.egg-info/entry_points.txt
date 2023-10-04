@@ -1,2 +1,0 @@
-[console_scripts]
-mgp = MGP_SDK.cli_commands.cli_commands:cli
