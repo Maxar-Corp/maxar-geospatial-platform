@@ -72,6 +72,12 @@ def _analytics():
     analytics_interface = Interface().analytics
     return analytics_interface
 
+
+def _basemaps():
+    _check_for_config()
+    basemaps_interface = Interface().basemap_service
+    return basemaps_interface
+
   
 @click.command()
 def home_dir():
@@ -184,7 +190,7 @@ def delete_tokens(token_id):
 @click.option('--username', '-u', help='Your username', type=str)
 @click.option('--password', '-p', help='Your password', type=str)
 @click.option('--client_id', '-c', help='Your client id', type=str)
-def config_file(username=None, password=None, client_id=None):
+def config_file(username, password, client_id):
     """
     Creates a configuration file for authentication use for Maxar tenants
     """
@@ -246,15 +252,18 @@ def reset_password(password):
 @click.command()
 @click.option('--bbox', '-b',
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
-@click.option('--filter', '-f', help='CQL filter used to refine data of search', type=str)
-@click.option('--shapefile', '-s', help='Binary of whether or not to return as shapefile format', type=bool)
+@click.option('--srsname', '-srs', help='String of the desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--filter', '-f', help='CQL filter used to refine data of search', type=str, default=None)
+@click.option('--shapefile', '-s', help='Binary of whether or not to return as shapefile format', is_flag=True,
+              default=False)
 @click.option('--featureprofile', '-fp', help='String of the desired stacking profile. Defaults to account Default',
-              type=str)
+              type=str, default="Default")
 @click.option('--typename', '-t',
               help='String of the typename. Defaults to FinishedFeature. Example input MaxarCatalogMosaicProducts',
-              type=str)
-@click.option('--default', '-d', is_flag=True, help='Binary of whether or not to default yes over bbox prompt')
-def search(bbox=None, srsname="EPSG:4326", filter=None, shapefile=False, featureprofile=None, typename=None, default=False):
+              type=str, default="FinishedFeature")
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def search(bbox, srsname, filter, shapefile, featureprofile, typename, yes):
     """
     Searches an AOI using the WFS method and returns a list of features and their metadata that intersect with
     the AOI
@@ -266,47 +275,52 @@ def search(bbox=None, srsname="EPSG:4326", filter=None, shapefile=False, feature
         lines = f.readlines()
         for line in lines:
             if "bbox" in line:
-                if not default:
-                    bbox_check = click.prompt("A bbox has been found in the .MGP-config file. Would you like to use this "
-                                              "bbox?[y/n]")
+                if not yes:
+                    bbox_check = click.prompt(
+                        "A bbox has been found in the .MGP-config file. Would you like to use this "
+                        "bbox?[y/n]")
                     if bbox_check.lower() == "n":
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox found .MGP-config file")
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not default and bbox:
-                    bbox = bbox
-                elif default and not bbox:
-                    bbox = line[5:].strip()
-                elif default and bbox:
+                elif yes and not bbox:
+                    bbox = line.split("=")[1]
+                elif yes and bbox:
                     bbox = bbox
             else:
                 bbox = bbox
     if not typename:
-        wfs = streaming_interface.search(bbox, srsname=srsname, filter=filter, shapefile=shapefile, featureprofile=featureprofile)
+        wfs = streaming_interface.search(
+            bbox, srsname=srsname, filter=filter, shapefile=shapefile, featureprofile=featureprofile
+        )
     else:
-        wfs = streaming_interface.search(bbox, srsname=srsname, filter=filter, shapefile=shapefile, featureprofile=featureprofile,
-                           typename=typename)
+        wfs = streaming_interface.search(
+            bbox, srsname=srsname, filter=filter, shapefile=shapefile, featureprofile=featureprofile, typename=typename
+        )
     click.echo(wfs)
 
 
 @click.command()
 @click.option('--bbox', '-b',
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
-@click.option('--height', '-h', help='Integer value representing the vertical number of pixels to return', type=int)
-@click.option('--width', '-w', help='Integer value representing the horizontal number of pixels to return', type=int)
-@click.option('--img_format', '-img', help='String of the format of the response image either jpeg, png or geotiff',
-              type=str)
-@click.option('--zoom_level', '-z', help='Integer value of the zoom level. Used for WMTS', type=int)
-@click.option('--download', '-dl', help='Boolean of user option to download file locally', type=bool, default=True)
-@click.option('--outputpath', '-o', help='Path to desired download location')
-@click.option('--default', '-d', is_flag=True, help='Binary of whether or not to default yes over bbox prompt')
-def download(bbox=None, srsname="EPSG:4326", height=None, width=None, img_format=None, zoom_level=None, download=True,
-             outputpath=None, default=False):
+@click.option('--srsname', '-srs', help='String of the desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--height', '-h', help='Integer value representing the vertical number of pixels to return. Defaults to '
+                                     'None', type=int, default=None)
+@click.option('--width', '-w', help='Integer value representing the horizontal number of pixels to return. Defaults to '
+                                    'None', type=int, default=None)
+@click.option('--img_format', '-img', help='String of the format of the response image either jpeg, png or geotiff. '
+                                           'Defaults to jpeg', type=str, default='jpeg')
+@click.option('--zoom_level', '-z', help='Integer value of the zoom level. Used for WMTS. Defaults to None', type=int,
+              default=None)
+@click.option('--outputpath', '-o', help='Path to desired download location. Defaults to home directory')
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def download(bbox, srsname, height, width, img_format, zoom_level, outputpath, yes):
     """
     Downloads an image or a list of image calls and returns the file location of the download. NOTE: Structure
     of call should be structured with one of the following: 1) bbox, zoom_level, img_format; 2) bbox, img_format, height, width
@@ -317,15 +331,12 @@ def download(bbox=None, srsname="EPSG:4326", height=None, width=None, img_format
         home_dir = os.path.expanduser("~")
         outputpath = os.path.join(home_dir, "CLI_download.{}".format(img_format))
     if zoom_level:
-        # if not bbox:
-        #     raise Exception('zoom_level must have a bbox')
-        # else:
         home_dir = os.path.expanduser("~")
         with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
             lines = f.readlines()
             for line in lines:
                 if "bbox" in line:
-                    if not default:
+                    if not yes:
                         bbox_check = click.prompt(
                             "A bbox has been found in the .MGP-config file. Would you like to use this "
                             "bbox?[y/n]")
@@ -333,21 +344,21 @@ def download(bbox=None, srsname="EPSG:4326", height=None, width=None, img_format
                             if bbox:
                                 bbox = bbox
                             else:
-                                return click.echo("No bbox entered and no bbox found .MGP-config file")
+                                return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                         elif bbox_check.lower() == "y":
-                            bbox = line[5:].strip()
+                            bbox = line.split("=")[1]
                         else:
                             return click.echo("Invalid input. Please run command again and enter either y or n")
-                    elif not default and bbox:
-                        bbox = bbox
-                    elif default and not bbox:
-                        bbox = line[5:].strip()
-                    elif default and bbox:
+                    elif yes and not bbox:
+                        bbox = line.split("=")[1]
+                    elif yes and bbox:
                         bbox = bbox
                 else:
                     bbox = bbox
-            wmts = streaming_interface.download_image(zoom_level=zoom_level, bbox=bbox, img_format=img_format,
-                                                      srsname="EPSG:4326", download=download, outputpath=outputpath)
+            wmts = streaming_interface.download_image(
+                zoom_level=zoom_level, bbox=bbox, img_format=img_format, srsname=srsname, download=True,
+                outputpath=outputpath
+            )
         click.echo(wmts)
     else:
         if not img_format or not width or not height:
@@ -358,7 +369,7 @@ def download(bbox=None, srsname="EPSG:4326", height=None, width=None, img_format
                 lines = f.readlines()
                 for line in lines:
                     if "bbox" in line:
-                        if not default:
+                        if not yes:
                             bbox_check = click.prompt(
                                 "A bbox has been found in the .MGP-config file. Would you like to use this "
                                 "bbox?[y/n]")
@@ -366,32 +377,32 @@ def download(bbox=None, srsname="EPSG:4326", height=None, width=None, img_format
                                 if bbox:
                                     bbox = bbox
                                 else:
-                                    return click.echo("No bbox entered and no bbox found .MGP-config file")
+                                    return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                             elif bbox_check.lower() == "y":
-                                bbox = line[5:].strip()
+                                bbox = line.split("=")[1]
                             else:
                                 return click.echo("Invalid input. Please run command again and enter either y or n")
-                        elif not default and bbox:
-                            bbox = bbox
-                        elif default and not bbox:
-                            bbox = line[5:].strip()
-                        elif default and bbox:
+                        elif yes and not bbox:
+                            bbox = line.split("=")[1]
+                        elif yes and bbox:
                             bbox = bbox
                     else:
                         bbox = bbox
-            wms = streaming_interface.download_image(bbox=bbox, img_format=img_format, height=height, width=width,
-                                                     srsname="EPSG:4326", display=False, download=download,
-                                                     outputpath=outputpath)
+            wms = streaming_interface.download_image(
+                bbox=bbox, img_format=img_format, height=height, width=width, srsname=srsname, display=False,
+                download=True, outputpath=outputpath
+            )
         click.echo(wms)
 
 
 @click.command()
 @click.option('--bbox', '-b',
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
-@click.option('--zoom', '-z', help='Desired zoom level between 1 and 20', type=int)
+@click.option('--zoom', '-z', help='Desired zoom level between 1 and 20', type=int, required=True)
 @click.option('--srsname', '-s', help='Desired projection. Defaults to EPSG:4326', type=str, default='EPSG:4326')
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def get_tile_list(bbox, zoom, srsname='EPSG:4326', yes=False):
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def get_tile_list(bbox, zoom, srsname, yes):
     """
     Acquires a list of tile calls dependent on the desired bbox and zoom level
     """
@@ -403,30 +414,24 @@ def get_tile_list(bbox, zoom, srsname='EPSG:4326', yes=False):
         for line in lines:
             if "bbox" in line:
                 if not yes:
-                    bbox_check = click.prompt("A bbox has been found in the .MGP-config file. Would you like to use this "
-                                              "bbox?[y/n]")
+                    bbox_check = click.prompt(
+                        "A bbox has been found in the .MGP-config file. Would you like to use this "
+                        "bbox?[y/n]")
                     if bbox_check.lower() == "n":
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox found in .MGP-config file")
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
                 bbox = bbox
-    if not zoom:
-        try:
-            zoom = int(click.prompt("Please enter a zoom level between 1 and 20"))
-        except:
-            raise Exception("Zoom level must be an integer between 1 and 20")
     if zoom > 20 or zoom < 1:
         raise Exception("Zoom level must be an integer between 1 and 20")
     tile_list = streaming_interface.get_tile_list_with_zoom(bbox=bbox, zoom_level=zoom, srsname=srsname)
@@ -436,17 +441,21 @@ def get_tile_list(bbox, zoom, srsname='EPSG:4326', yes=False):
 @click.command()
 @click.option('--bbox', '-b',
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
-@click.option('--zoom', '-z', help='Desired zoom level between 1 and 20', type=int)
+@click.option('--zoom', '-z', help='Desired zoom level between 1 and 20', type=int, required=True)
 @click.option('--srsname', '-s', help='Desired projection. Defaults to EPSG:4326', type=str, default='EPSG:4326')
 @click.option('--img_format', '-i', help='Desired output image format. Defaults to jpeg', type=str, default='jpeg')
-@click.option('--outputpath', '-o', help='Desired output path for download. Defaults to None', type=str, default=None)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def download_tiles(bbox, zoom, srsname='EPSG:4326', img_format='jpeg', outputpath=None, yes=False):
+@click.option('--outputpath', '-o', help='Desired output path for download. Defaults to home directory', type=str)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def download_tiles(bbox, zoom, srsname, img_format, outputpath, yes):
     """
     Downloads all tiles within a bbox dependent on zoom level
     """
 
     streaming_interface = _streaming()
+    if not outputpath:
+        home_dir = os.path.expanduser("~")
+        outputpath = os.path.join(home_dir, "CLI_download.{}".format(img_format))
     home_dir = os.path.expanduser("~")
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
         lines = f.readlines()
@@ -460,24 +469,17 @@ def download_tiles(bbox, zoom, srsname='EPSG:4326', img_format='jpeg', outputpat
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox found in .MGP-config file")
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
                 bbox = bbox
-    if not zoom:
-        try:
-            zoom = int(click.prompt("Please enter a zoom level between 1 and 20"))
-        except:
-            raise Exception("Zoom level must be an integer between 1 and 20")
     if zoom > 20 or zoom < 1:
         raise Exception("Zoom level must be an integer between 1 and 20")
     tiles = streaming_interface.download_tiles(
@@ -489,18 +491,24 @@ def download_tiles(bbox, zoom, srsname='EPSG:4326', img_format='jpeg', outputpat
 @click.command()
 @click.option('--bbox', '-b',
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
-@click.option('--height', '-h', help='Desired height of image in pixels', type=int)
-@click.option('--width', '-w', help='Desired width of image in pixels', type=int)
+@click.option('--height', '-h', help='Desired height of image in pixels. Defaults to 512', type=int, default=512,
+              required=True)
+@click.option('--width', '-w', help='Desired width of image in pixels. Defaults to 512', type=int, default=512,
+              required=True)
 @click.option('--srsname', '-s', help='Desired projection. Defaults to EPSG:4326', type=str, default='EPSG:4326')
 @click.option('--img_format', '-i', help='Desired output image format. Defaults to jpeg', type=str, default='jpeg')
-@click.option('--outputpath', '-o', help='Desired output path for download. Defaults to None', type=str, default=None)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def download_by_pixel_count(bbox, height, width, srsname='EPSG:4326', img_format='jpeg', outputpath=None, yes=False):
+@click.option('--outputpath', '-o', help='Desired output path for download. Defaults to home directory', type=str)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def download_by_pixel_count(bbox, height, width, srsname, img_format, outputpath, yes):
     """
     Downloads the image of desired bbox dependent on pixel height and width
     """
 
     streaming_interface = _streaming()
+    if not outputpath:
+        home_dir = os.path.expanduser("~")
+        outputpath = os.path.join(home_dir, "CLI_download.{}".format(img_format))
     home_dir = os.path.expanduser("~")
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
         lines = f.readlines()
@@ -514,31 +522,19 @@ def download_by_pixel_count(bbox, height, width, srsname='EPSG:4326', img_format
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox found in .MGP-config file")
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
                 bbox = bbox
-    if not height:
-        try:
-            height = int(click.prompt("Please enter a desired image height in pixels between 1 and 8000"))
-        except:
-            raise Exception("Height must be an integer between 1 and 8000")
     if height > 8000 or height < 1:
         raise Exception("Height must be an integer between 1 and 8000")
-    if not width:
-        try:
-            width = int(click.prompt("Please enter a desired image width in pixels between 1 and 8000"))
-        except:
-            raise Exception("Width must be an integer between 1 and 8000")
     if width > 8000 or width < 1:
         raise Exception("Width must be an integer between 1 and 8000")
     image_by_pixel = streaming_interface.download_image_by_pixel_count(
@@ -548,20 +544,22 @@ def download_by_pixel_count(bbox, height, width, srsname='EPSG:4326', img_format
 
 
 @click.command()
-@click.option('--featureid', '-f', help='Desired feature ID', type=str)
-@click.option('--thread_number', '-t', help='Desired thread number for multithreading. Defaults to 100', type=int, default=100)
-@click.option(
-    '--bbox', '-b', help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx). '
-                         'Deafults to None', type=str, default=None
-)
-@click.option('--mosaic', '-m', help='Flag to determine whether or not to mosaic images together', is_flag=True, default=False)
+@click.option('--featureid', '-f', help='Desired feature ID', type=str, required=True)
+@click.option('--thread_number', '-t', help='Desired thread number for multithreading. Defaults to 100', type=int,
+              default=100)
+@click.option('--bbox', '-b', help='String bounding box of AOI. Comma delimited set of coordinates. '
+                                   '(miny,minx,maxy,maxx). Deafults to None', type=str, default=None)
+@click.option('--mosaic', '-m', help='Flag to determine whether or not to mosaic images together. Defaults to False',
+              is_flag=True, default=False)
 @click.option('--srsname', '-s', help='Desired projection. Defaults to EPSG:4326', type=str, default='EPSG:4326')
-@click.option('--outputdirectory', '-o', help='Desired output directory for download. Defaults to None', type=str, default=None)
+@click.option('--outputdirectory', '-o', help='Desired output directory for download. Defaults to None', type=str,
+              default=None)
 @click.option('--image_format', '-i', help='Desired output image format. Defaults to jpeg', type=str, default='jpeg')
-@click.option('--filename', '-fn', help='Desired filename for mosaiced image. Defaults to Maxar_Image', type=str, default='Maxar_Image')
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def full_res_image(featureid, thread_number=100, bbox=None, mosaic=False, srsname='EPSG:4326', outputdirectory=None,
-                   image_format='jpeg', filename='Maxar_Image', yes=False):
+@click.option('--filename', '-fn', help='Desired filename for mosaiced image. Defaults to Maxar_Image', type=str,
+              default='Maxar_Image')
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def full_res_image(featureid, thread_number, bbox, mosaic, srsname, outputdirectory, image_format, filename, yes):
     """
     Takes in a feature id and breaks the image up into 1024x1024 tiles, then places a number of calls based on
     multithreading percentages to return a full image strip in multiple tiles
@@ -581,21 +579,17 @@ def full_res_image(featureid, thread_number=100, bbox=None, mosaic=False, srsnam
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox found in .MGP-config file")
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
                 bbox = bbox
-    if not featureid:
-        featureid = click.prompt("Enter desired feature ID")
     full_resolution_image = streaming_interface.get_full_res_image(
         featureid=featureid, thread_number=thread_number, bbox=bbox, mosaic=mosaic, srsname=srsname,
         outputdirectory=outputdirectory, image_format=image_format, filename=filename
@@ -606,10 +600,12 @@ def full_res_image(featureid, thread_number=100, bbox=None, mosaic=False, srsnam
 @click.command()
 @click.option('--base_dir', '-b', help='Root directory containing image files to be mosaiced', type=str, required=True)
 @click.option('--img_format', '-if', help='Image format of files', type=str, required=True)
-@click.option('--img_size', '-is', help='Size of individual image files, defaults to 1024', type=int, default=1024)
-@click.option('--outputdirectory', '-o', help='Desired output directory for download', type=str)
-@click.option('--filename', '-fn', help='Desired filename for mosaiced image. Defaults to merged_image', type=str, default='merged_image')
-def mosaic(base_dir, img_format, img_size, outputdirectory, filename='merged_image'):
+@click.option('--img_size', '-is', help='Size of individual image files. Defaults to 1024', type=int, default=1024)
+@click.option('--outputdirectory', '-o', help='Desired output directory for download. Defaults to home directory',
+              type=str)
+@click.option('--filename', '-fn', help='Desired filename for mosaiced image. Defaults to merged_image', type=str,
+              default='merged_image')
+def mosaic(base_dir, img_format, img_size, outputdirectory, filename):
     """
     Creates a mosaic of downloaded image tiles from full_res_dowload function
     """
@@ -626,8 +622,9 @@ def mosaic(base_dir, img_format, img_size, outputdirectory, filename='merged_ima
 @click.command()
 @click.option('--bbox', '-b',
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def calculate_bbox_sqkm(bbox=None, yes=False):
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def calculate_bbox_sqkm(bbox, yes):
     """
     Calculates the area in square kilometers of the bbox
     """
@@ -646,15 +643,13 @@ def calculate_bbox_sqkm(bbox=None, yes=False):
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox found .MGP-config file")
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
@@ -668,8 +663,9 @@ def calculate_bbox_sqkm(bbox=None, yes=False):
 @click.option('--account_name', '-an', help='Desired account Name')
 @click.option('--id_name', '-idn', is_flag=True, help='Binary for short list of accounts and names. Defaults to False',
               default=False)
-@click.option('--types', '-t', is_flag=True, help='Binary for list of all account types. Defaults to False', default=False)
-def get_accounts(account_id=None, account_name=None, id_name=False, types=False):
+@click.option('--types', '-t', is_flag=True, help='Binary for list of all account types. Defaults to False',
+              default=False)
+def get_accounts(account_id, account_name, id_name, types):
     """
     Lists all accounts if no parameters are passed, or lists a desired account based on parameters passed
     """
@@ -692,15 +688,13 @@ def account_roles():
 
 
 @click.command()
-@click.option('--account_id', '-ai', help='Desired account ID')
+@click.option('--account_id', '-ai', help='Desired account ID', required=True)
 def account_comments(account_id):
     """
     Lists all comments for a desired account
     """
 
     admin_interface = _admin()
-    if not account_id:
-        account_id = click.prompt('Please enter an account ID')
     comments = admin_interface.account_info.get_comment(account_id)
     click.echo(comments)
 
@@ -708,41 +702,38 @@ def account_comments(account_id):
 @click.command()
 @click.option('--activation_id', '-ai', help='Desired activation ID. Defaults to None', default=None)
 @click.option('--activation_number', '-an', help='Desired activation number. Defaults to None', default=None)
-def get_activations(activation_id=None, activation_number=None):
+def get_activations(activation_id, activation_number):
     """
     Lists all activations if no parameters are passed, or lists a desired activation based on parameters passed
     """
 
     admin_interface = _admin()
-    activations = admin_interface.activations.get_activations(activation_id=activation_id,
-                                                              activation_number=activation_number)
+    activations = admin_interface.activations.get_activations(
+        activation_id=activation_id, activation_number=activation_number
+    )
     click.echo(activations)
 
 
 @click.command()
-@click.option('--account_id', '-ai', help='Desired account ID')
+@click.option('--account_id', '-ai', help='Desired account ID', required=True)
 def activations_for_account(account_id):
     """
     Lists all activations tied to the desired account
     """
 
     admin_interface = _admin()
-    if not account_id:
-        account_id = click.prompt('Please enter an account ID')
     activations = admin_interface.activations.get_activations_for_account(account_id)
     click.echo(activations)
 
 
 @click.command()
-@click.option('--activation_number', '-an', help='Desired activation number')
+@click.option('--activation_number', '-an', help='Desired activation number', required=True)
 def activation_credit_limit(activation_number):
     """
     Gets the credit limit for the desired activation
     """
 
     admin_interface = _admin()
-    if not activation_number:
-        activation_number = click.prompt('Please enter an activation number')
     act_credit_limit = admin_interface.activations.get_activation_credit_limit(activation_number=activation_number)
     click.echo(act_credit_limit)
 
@@ -774,7 +765,7 @@ def get_products():
 @click.option('--usage_type', '-ut', help='Desired usage type. Defaults to None', default=None)
 @click.option('--age', '-a', help='Desired age range. Defaults to None', default=None)
 @click.option('--catalog_type', '-ct', help='Desired catalog type. Defaults to None', default=None)
-def product_filter(product_category=None, usage_type=None, age=None, catalog_type=None):
+def product_filter(product_category, usage_type, age, catalog_type):
     """
     Lists all products based on filter parameters passed in
     """
@@ -782,14 +773,15 @@ def product_filter(product_category=None, usage_type=None, age=None, catalog_typ
     admin_interface = _admin()
     if not product_category and not usage_type and not age and not catalog_type:
         raise Exception('Please enter a filter option')
-    prod_filter = admin_interface.products.filter_products(product_category=product_category, usage_type=usage_type,
-                                                           age=age, catalog_type=catalog_type)
+    prod_filter = admin_interface.products.filter_products(
+        product_category=product_category, usage_type=usage_type, age=age, catalog_type=catalog_type
+    )
     click.echo(prod_filter)
 
 
 @click.command()
 @click.option('--table_id', '-t', help='Desired rate table ID. Defaults to None', default=None)
-def get_rate_table(table_id=None):
+def get_rate_table(table_id):
     """
     Lists all rate tables if no parameters are passed, or lists a desired rate table based on parameters passed
     """
@@ -800,15 +792,13 @@ def get_rate_table(table_id=None):
 
 
 @click.command()
-@click.option('--table_id', '-t', help='Desired rate table ID')
+@click.option('--table_id', '-t', help='Desired rate table ID', required=True)
 def get_activation_for_table(table_id):
     """
     Lists all activations associated with the desired rate table
     """
 
     admin_interface = _admin()
-    if not table_id:
-        table_id = click.prompt('Please enter a rate table ID')
     rate_table_activations = admin_interface.rate_table_info.get_activations_for_table(table_id=table_id)
     click.echo(rate_table_activations)
 
@@ -825,15 +815,13 @@ def get_credit_types():
 
 
 @click.command()
-@click.option('--table_id', '-t', help='Desired rate table ID')
+@click.option('--table_id', '-t', help='Desired rate table ID', required=True)
 def get_rate_amounts(table_id):
     """
     Lists all rate amounts for the desired rate table
     """
 
     admin_interface = _admin()
-    if not table_id:
-        table_id = click.prompt('Please enter a rate table ID')
     rate_table_product_credits = admin_interface.rate_table_info.get_rate_amounts(table_id=table_id)
     click.echo(rate_table_product_credits)
 
@@ -866,8 +854,8 @@ def user_types():
     Lists all available user types
     """
 
-    admin_tinerface = _admin()
-    user_type = admin_tinerface.roles.get_user_types()
+    admin_interface = _admin()
+    user_type = admin_interface.roles.get_user_types()
     click.echo(user_type)
 
 
@@ -876,7 +864,7 @@ def user_types():
 @click.option('--username', '-u', help='Desired username. Defaults to None', default=None)
 @click.option('--page_size', '-ps', help='Desire page size. Defaults to None', default=None)
 @click.option('--page', '-p', help='Desired starting page number. Defaults to None', default=None)
-def get_users(user_id=None, username=None, page_size=None, page=None):
+def get_users(user_id, username, page_size, page):
     """
     Lists all users if no parameters are passed, or lists a desired user based on parameters passed
     """
@@ -886,22 +874,20 @@ def get_users(user_id=None, username=None, page_size=None, page=None):
     click.echo(user_list)
 
 
-
 @click.command()
-@click.option('--user_id', '-id', help='Desired user ID')
-@click.option('--yes', '-y', help='Flag to bypass one or more update options. Defaults to False', is_flag=True, default=False)
-@click.option('--username', '-u', help='Desire username. Defaults to None', required=False, default=None)
-@click.option('--first_name', '-f', help='Desired first name. Defaults to None', required=False, default=None)
-@click.option('--last_name', '-l', help='Desired last name. Defaults to None', required=False, default=None)
-@click.option('--phone', '-p', help='Desired phone number. Defaults to None', required=False, default=None)
-def update_user(user_id, username, first_name, last_name, phone, yes=False):
+@click.option('--user_id', '-id', help='Desired user ID', required=True)
+@click.option('--username', '-u', help='Desired username. Defaults to None', default=None)
+@click.option('--first_name', '-f', help='Desired first name. Defaults to None', default=None)
+@click.option('--last_name', '-l', help='Desired last name. Defaults to None', default=None)
+@click.option('--phone', '-p', help='Desired phone number. Defaults to None', default=None)
+@click.option('--yes', '-y', help='Flag to bypass one or more update options. Defaults to False', is_flag=True,
+              default=False)
+def update_user(user_id, username, first_name, last_name, phone, yes):
     """
     Updates desired user based on parameters passed
     """
 
     admin_interface = _admin()
-    if not user_id:
-        user_id = click.prompt("Enter desired user ID")
     if username:
         var_username = username
         update = admin_interface.users.update_user(user_id, username=var_username)
@@ -942,15 +928,15 @@ def update_user(user_id, username, first_name, last_name, phone, yes=False):
 
 
 @click.command()
-@click.option('--user_type', '-ut', help='Desired user type')
-@click.option('--account_id', '-acc_id', help='Desired account ID')
-@click.option('--activation_id', '-act_id', help='Desired activation ID')
-@click.option('--email', '-e', help='Desired email Address')
-@click.option('--first_name', '-f', help='Desired first name')
-@click.option('--last_name', '-l', help='Desired last name')
-@click.option('--country', '-c', help='Desired country of origin')
+@click.option('--user_type', '-ut', help='Desired user type', required=True)
+@click.option('--account_id', '-acc_id', help='Desired account ID', required=True)
+@click.option('--activation_id', '-act_id', help='Desired activation ID', required=True)
+@click.option('--email', '-e', help='Desired email Address', required=True)
+@click.option('--first_name', '-f', help='Desired first name', required=True)
+@click.option('--last_name', '-l', help='Desired last name', required=True)
+@click.option('--country', '-c', help='Desired country of origin', required=True)
 @click.option('--client_id', '-cid', help='Desired client ID. Defaults to mgp', default='mgp')
-def create_user(user_type, account_id, activation_id, email, first_name, last_name, country, client_id='mgp'):
+def create_user(user_type, account_id, activation_id, email, first_name, last_name, country, client_id):
     """
     Creates a new user based on parameters passed
     """
@@ -992,11 +978,13 @@ def create_user(user_type, account_id, activation_id, email, first_name, last_na
 
 
 @click.command()
-@click.option('--user_id', '-u', help='Desired user ID')
-@click.option('--roles', '-r', help='Name of role(s) to add. If multiple roles, separate roles by comma', type=str)
-@click.option('--client_id', '-c', help='Desired client ID. Defaults to mgp client ID', default='b4e8d573-56ee-4e79-abcd-7b161f93ea17')
-@click.option('--delete', '-d', help='Boolean for deleting roles. Defaults to False', default=False, is_flag=True)
-def update_user_roles(user_id, roles, client_id, delete=False):
+@click.option('--user_id', '-u', help='Desired user ID', required=True)
+@click.option('--roles', '-r', help='Name of role(s) to add. If multiple roles, separate roles by comma', type=str,
+              required=True)
+@click.option('--client_id', '-c', help='Desired client ID. Defaults to mgp client ID',
+              default='b4e8d573-56ee-4e79-abcd-7b161f93ea17')
+@click.option('--delete', '-d', help='Flag for deleting roles. Defaults to False', is_flag=True, default=False)
+def update_user_roles(user_id, roles, client_id, delete):
     """
     Adds or removes roles to the desired user based on parameters passed
     """
@@ -1015,45 +1003,42 @@ def update_user_roles(user_id, roles, client_id, delete=False):
 
 
 @click.command()
-@click.option('--user_id', '-u', help='Desired user ID')
+@click.option('--user_id', '-u', help='Desired user ID', required=True)
 def get_user_roles(user_id):
     """
     Lists all roles tied to the desired user
     """
 
     admin_interface = _admin()
-    if not user_id:
-        user_id = click.prompt("Enter user ID")
     user_roles = admin_interface.users.get_user_roles(user_id=user_id)
     click.echo(user_roles)
 
 
 @click.command()
-@click.option('--user_id', '-u', help='Desired user ID')
-@click.option('--client_id', '-c', help='Desired client ID. Defaults to mgp client ID', default="b4e8d573-56ee-4e79-abcd-7b161f93ea17")
-def get_user_available_roles(user_id, client_id="b4e8d573-56ee-4e79-abcd-7b161f93ea17"):
+@click.option('--user_id', '-u', help='Desired user ID', required=True)
+@click.option('--client_id', '-c', help='Desired client ID. Defaults to mgp client ID',
+              default="b4e8d573-56ee-4e79-abcd-7b161f93ea17")
+def get_user_available_roles(user_id, client_id):
     """
     Lists all roles that can be tied to the desired user
     """
 
     admin_interface = _admin()
-    if not user_id:
-        user_id = click.prompt("Enter user ID")
     user_available_roles = admin_interface.users.get_user_available_roles(user_id=user_id, client_id=client_id)
     click.echo(user_available_roles)
 
 
 @click.command()
-@click.option('--user_id', '-u', help='Desired user ID')
-@click.option('--yes', '-y', help='Flag to bypass deletion confirmation. Defaults to False', default=False, is_flag=True)
-def delete_user(user_id, yes=False):
+@click.option('--user_id', '-u', help='Desired user ID', required=True)
+@click.option(
+    '--yes', '-y', help='Flag to bypass deletion confirmation. Defaults to False', is_flag=True, default=False
+)
+def delete_user(user_id, yes):
     """
     Deletes a user
     """
 
     admin_interface = _admin()
-    if not user_id:
-        user_id = click.prompt("Enter user ID")
     if not yes:
         check = click.prompt("Are you sure you wish to delete this user? [y/n]")
         if check.lower() == "n":
@@ -1091,8 +1076,9 @@ def activation_usage(page, page_size, sort, client_id):
     \b
     Lists one or more activation's usage. Sort options are:
     id, activationNumber, sapContractIdentifier, sapLineItem, startDate, endDate, creditLimit, totalCreditsUsed,
-    creditsUsedPercentage, numberOfUsers, totalUsers, accountTotalUsers, accountName, accountNumber, accountSapLicenseId,
-    accountLicensee, accountSoldTo, userLimit, dailyCreditLimitTotal, dailyCreditLimitUsed, clientContextId
+    creditsUsedPercentage, numberOfUsers, totalUsers, accountTotalUsers, accountName, accountNumber,
+    accountSapLicenseId, accountLicensee, accountSoldTo, userLimit, dailyCreditLimitTotal, dailyCreditLimitUsed,
+    clientContextId
     """
     admin_interface = _admin()
     act_usage = admin_interface.usage.get_activation_usage(
@@ -1114,7 +1100,9 @@ def user_usage(page, page_size, sort, client_id):
     totalCreditsUsed, dailyCreditLimitTotal, dailyCreditLimitUsed, userType, clientContextId
     """
     admin_interface = _admin()
-    us_usage = admin_interface.usage.get_user_usage(page=page, pageSize=page_size, sortBy=sort, clientContextId=client_id)
+    us_usage = admin_interface.usage.get_user_usage(
+        page=page, pageSize=page_size, sortBy=sort, clientContextId=client_id
+    )
     click.echo(us_usage)
 
 
@@ -1139,19 +1127,27 @@ def usage_overview():
 
 
 @click.command()
-@click.option('--collections', '-c', help='Comma-separated list of collections to search in. Use str format not a Python list', default=None)
+@click.option('--collections', '-c',
+              help='Comma-separated list of collections to search in. Use str format not a Python list', default=None)
 @click.option('--sub_catalog_id', '-scid', help='Name of the subCatalogId to search in', default=None)
-@click.option('--sub_catalog_collection', '-scc', help='Used to denote collections inside of sub catalogs', default=None)
-@click.option('--bbox', '-b', help='Bounding box in format "west,south,east,north" in WGS84 decimal degrees', default=None)
-@click.option('--datetime', '-d', help='Date range filter in ISO 8601 format "start-date/end-date" or exact datetime', default=None)
-@click.option('--stac_id', '-sid', help='Comma-separated list of STAC item IDs to return. Use str format not a Python list', default=None)
+@click.option(
+    '--sub_catalog_collection', '-scc', help='Used to denote collections inside of sub catalogs', default=None
+)
+@click.option(
+    '--bbox', '-b', help='Bounding box in format "west,south,east,north" in WGS84 decimal degrees', default=None
+)
+@click.option('--datetime', '-d', help='Date range filter in ISO 8601 format "start-date/end-date" or exact datetime',
+              default=None)
+@click.option('--stac_id', '-sid',
+              help='Comma-separated list of STAC item IDs to return. Use str format not a Python list', default=None)
 @click.option('--intersects', '-i', help='GeoJSON geometry to search by', default=None)
 @click.option('--where', '-w', help='SQL-style WHERE clause for filtering STAC items by properties', default=None)
 @click.option('--orderby', '-oby', help='SQL-style ORDER BY clause. Only for id and datetime')
 @click.option('--limit', '-l', help='Maximum number of items to return. Defaults to 10', default=10)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def stac_search(collections, sub_catalog_id, sub_catalog_collection, bbox, datetime, stac_id, intersects, where, orderby,
-                limit, yes):
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def stac_search(collections, sub_catalog_id, sub_catalog_collection, bbox, datetime, stac_id, intersects, where,
+                orderby, limit, yes):
     """
     Returns a list of STAC items
     """
@@ -1171,15 +1167,13 @@ def stac_search(collections, sub_catalog_id, sub_catalog_collection, bbox, datet
                         if bbox:
                             bbox = bbox
                         else:
-                            bbox = None
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
@@ -1196,17 +1190,14 @@ def stac_search(collections, sub_catalog_id, sub_catalog_collection, bbox, datet
                         else:
                             intersects = None
                     elif geojson_check.lower() == "y":
-                        intersects = line[8:].strip()
+                        intersects = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and intersects:
-                    intersects = line[8:].strip()
-                    # intersects = intersects
                 elif yes and not intersects:
-                    intersects = line[8:].strip()
+                    intersects = line.split("=")[1]
                 elif yes and intersects:
-                    intersects = line[8:].strip()
-                    # intersects = intersects
+                    # intersects = line[8:].strip()
+                    intersects = intersects
             else:
                 intersects = intersects
     if aoi_dict['bbox'] != None:
@@ -1216,14 +1207,19 @@ def stac_search(collections, sub_catalog_id, sub_catalog_collection, bbox, datet
     params = {"collections": collections, "sub_catalog_id": sub_catalog_id,
               "sub_catalog_collection": sub_catalog_collection, "bbox": bbox, "datetime": datetime, "stac_id": stac_id,
               "intersects": intersects, "where": where, "orderby": orderby, "limit": limit}
-    not_none_params = {k:v for k, v in params.items() if v is not None}
-    click.echo(discovery_interface.search.stac_search_with_filtering(**not_none_params))
+    not_none_params = {k: v for k, v in params.items() if v is not None}
+    stac = discovery_interface.stac_search(**not_none_params)
+    click.echo(stac)
 
 
 @click.command()
 @click.option('--collection_id', '-cid', help='Identifier of the desired collection', required=True)
-@click.option('--audit_insert_date', '-aid', help='Desired insert date in ISO-8601 format. Mutually exclusive with auditUpdateDate. Defaults to None', default=None)
-@click.option('--audit_update_date', '-aud', help='Desired update date in ISO-8601 format. Mutually exclusive with auditInsertDate. Defaults to None', default=None)
+@click.option('--audit_insert_date', '-aid',
+              help='Desired insert date in ISO-8601 format. Mutually exclusive with auditUpdateDate. Defaults to None',
+              default=None)
+@click.option('--audit_update_date', '-aud',
+              help='Desired update date in ISO-8601 format. Mutually exclusive with auditInsertDate. Defaults to None',
+              default=None)
 @click.option('--limit', '-l', help='Maximum number of items to return. Defaults to 10', default=10)
 def search_audit_fields(collection_id, audit_insert_date, audit_update_date, limit):
     """
@@ -1233,10 +1229,10 @@ def search_audit_fields(collection_id, audit_insert_date, audit_update_date, lim
     discovery_interface = _discovery()
     if audit_update_date and audit_insert_date:
         raise Exception("audit insert date and audit update date are mutually exclusive from each other")
-    audit = discovery_interface.collections.search_stac_by_audit_fields(collection_id=collection_id,
-                                                                        audit_insert_date=audit_insert_date,
-                                                                        audit_update_date=audit_update_date,
-                                                                        limit=limit)
+    audit = discovery_interface.search_by_audit_fields(
+        collection_id=collection_id, audit_insert_date=audit_insert_date, audit_update_date=audit_update_date,
+        limit=limit
+    )
     click.echo(audit)
 
 
@@ -1334,7 +1330,8 @@ def all_sub_catalog_definitions(sub_catalog_id, orderby, limit):
 
 @click.command()
 @click.option('--sub_catalog_id', '-s', help='Identifier of the sub catalog to view', required=True)
-@click.option('--sub_catalog_collection_id', '-sc', help='Identifier of the sub catalog collection to view', required=True)
+@click.option('--sub_catalog_collection_id', '-sc', help='Identifier of the sub catalog collection to view',
+              required=True)
 def sub_catalog_collection_definition(sub_catalog_id, sub_catalog_collection_id):
     """
     View the definition of a collection that belongs to a Sub-Catalog
@@ -1381,7 +1378,8 @@ def get_pipeline(namespace, name):
 @click.option('--metadata', '-m', help='Project metadata', required=True)
 @click.option('--validate', '-v', help='Flag to validate order. Defaults to False', is_flag=True, default=False)
 @click.option('--estimate', '-e', help='Flag to estimate order usage. Defaults to False', is_flag=True, default=False)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
 def order(namespace, name, settings, aoi, output_config, notifications, metadata, validate, estimate, yes):
     """
     Validate, estimate, or submit an order
@@ -1403,13 +1401,11 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
                         else:
                             aoi = None
                     elif geojson_check.lower() == "y":
-                        aoi = line[8:].strip()
+                        aoi = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and aoi:
-                    aoi = aoi
                 elif yes and not aoi:
-                    aoi = line[8:].strip()
+                    aoi = line.split("=")[1]
                 elif yes and aoi:
                     aoi = aoi
             else:
@@ -1417,7 +1413,8 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
             if "order_settings" in line:
                 if not yes:
                     settings_check = click.prompt(
-                        "An order settings template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "An order settings template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if settings_check.lower() == "n":
                         if settings:
@@ -1425,13 +1422,11 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
                         else:
                             settings = None
                     elif settings_check.lower() == "y":
-                        settings = line[15:].strip()
+                        settings = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and settings:
-                    settings = settings
                 elif yes and not settings:
-                    settings = line[15:].strip()
+                    settings = line.split("=")[1]
                 elif yes and settings:
                     settings = settings
             else:
@@ -1439,7 +1434,8 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
             if "output_settings" in line:
                 if not yes:
                     output_config_check = click.prompt(
-                        "An output config template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "An output config template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if output_config_check.lower() == "n":
                         if output_config:
@@ -1447,13 +1443,11 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
                         else:
                             output_config = None
                     elif output_config_check.lower() == "y":
-                        output_config = line[16:].strip()
+                        output_config = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and output_config:
-                    output_config = output_config
                 elif yes and not output_config:
-                    output_config = line[16:].strip()
+                    output_config = line.split("=")[1]
                 elif yes and output_config:
                     output_config = output_config
             else:
@@ -1461,7 +1455,8 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
             if "notifications_settings" in line:
                 if not yes:
                     notifications_check = click.prompt(
-                        "A notifications template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "A notifications template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if notifications_check.lower() == "n":
                         if notifications:
@@ -1469,13 +1464,11 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
                         else:
                             notifications = None
                     elif notifications_check.lower() == "y":
-                        notifications = line[23:].strip()
+                        notifications = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and notifications:
-                    notifications = notifications
                 elif yes and not notifications:
-                    notifications = line[23:].strip()
+                    notifications = line.split("=")[1]
                 elif yes and notifications:
                     notifications = notifications
             else:
@@ -1498,9 +1491,11 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
         endpoint = "estimate"
     else:
         endpoint = "order"
-    click.echo(ordering_interface.place_order(namespace=namespace, name=name, settings=dict_settings,
-                                              output_config=config, metadata=meta,
-                                              notifications=notifications_dict, endpoint=endpoint))
+    order_request = ordering_interface.place_order(
+        namespace=namespace, name=name, settings=dict_settings, output_config=config, metadata=meta,
+        notifications=notifications_dict, endpoint=endpoint
+    )
+    click.echo(order_request)
 
 
 @click.command()
@@ -1522,8 +1517,8 @@ def order_details(order_id):
                                               'returned, paging forward.', default=None)
 @click.option('--ending_before', '-eb', help='Token (base-64-encoded key) after which further responses will be '
                                              'returned, paging backward.', default=None)
-@click.option('--filter', '-f', help=' Filter results that match values contained in the given key separated by a colon.',
-              default=None)
+@click.option('--filter', '-f', help=' Filter results that match values contained in the given key separated by a '
+                                     'colon.', default=None)
 def order_events(order_id, limit, starting_after, ending_before, filter):
     """
     List the order events for an order
@@ -1566,19 +1561,23 @@ def cancel_order(order_id):
 
 
 @click.command()
-@click.option('--pipeline', '-p', help='Desired pipeline namespace and name separated by a forward slash', required=True)
+@click.option('--pipeline', '-p', help='Desired pipeline namespace and name separated by a forward slash',
+              required=True)
 @click.option('--recipe', '-r', help='Desired image recipe', required=True)
 @click.option('--start_datetime', '-sd', help='ISO-8601 formatted date when the tasking should start', required=True)
 @click.option('--end_datetime', '-ed', help='ISO-8601 formatted date when the tasking should end', required=True)
-@click.option('--settings', '-s', help='Tasking settings including inventory ids placeholder list and customer description')
+@click.option('--settings', '-s', help='Tasking settings including inventory ids placeholder list and customer '
+                                       'description')
 @click.option('--aoi', '-a', help='GeoJSON of AOI')
 @click.option('--output_config', '-o', help='Output configuration template')
 @click.option('--notifications', '-n', help='Notifications template')
 @click.option('--metadata', '-m', help='Project metadata', required=True)
-@click.option('--validate', '-v', help='Flag to valide tasking request. Defaults to False', is_flag=True, default=False)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
-def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi, output_config, notifications, metadata,
-                   validate, yes):
+@click.option('--validate', '-v', help='Flag to validate tasking request. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi, output_config, notifications,
+                   metadata, validate, yes):
     """
     Submits or validates a tasking request
     """
@@ -1599,13 +1598,11 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
                         else:
                             aoi = None
                     elif geojson_check.lower() == "y":
-                        aoi = line[8:].strip()
+                        aoi = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and aoi:
-                    aoi = aoi
                 elif yes and not aoi:
-                    aoi = line[8:].strip()
+                    aoi = line.split("=")[1]
                 elif yes and aoi:
                     aoi = aoi
             else:
@@ -1613,7 +1610,8 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
             if "tasking_template" in line:
                 if not yes:
                     tasking_template_check = click.prompt(
-                        "A tasking template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "A tasking template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if tasking_template_check.lower() == "n":
                         if settings:
@@ -1621,13 +1619,11 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
                         else:
                             settings = None
                     elif tasking_template_check.lower() == "y":
-                        settings = line[17:].strip()
+                        settings = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and settings:
-                    settings = settings
                 elif yes and not settings:
-                    settings = line[17:].strip()
+                    settings = line.split("=")[1]
                 elif yes and settings:
                     settings = settings
             else:
@@ -1635,7 +1631,8 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
             if "output_settings" in line:
                 if not yes:
                     output_config_check = click.prompt(
-                        "An output config template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "An output config template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if output_config_check.lower() == "n":
                         if output_config:
@@ -1643,13 +1640,11 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
                         else:
                             output_config = None
                     elif output_config_check.lower() == "y":
-                        output_config = line[16:].strip()
+                        output_config = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and output_config:
-                    output_config = output_config
                 elif yes and not output_config:
-                    output_config = line[16:].strip()
+                    output_config = line.split("=")[1]
                 elif yes and output_config:
                     output_config = output_config
             else:
@@ -1657,7 +1652,8 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
             if "notifications_settings" in line:
                 if not yes:
                     notifications_check = click.prompt(
-                        "A notifications template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "A notifications template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if notifications_check.lower() == "n":
                         if notifications:
@@ -1665,13 +1661,11 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
                         else:
                             notifications = None
                     elif notifications_check.lower() == "y":
-                        notifications = line[23:].strip()
+                        notifications = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and notifications:
-                    notifications = notifications
                 elif yes and not notifications:
-                    notifications = line[23:].strip()
+                    notifications = line.split("=")[1]
                 elif yes and notifications:
                     notifications = notifications
             else:
@@ -1688,14 +1682,15 @@ def submit_tasking(pipeline, recipe, start_datetime, end_datetime, settings, aoi
         validate = True
     else:
         validate = False
-    tasking = tasking_interface.new_tasking(start_datetime=start_datetime, end_datetime=end_datetime,
-                                            aoi_geojson=json.loads(aoi), recipe=recipe, order_templates=tasking_data,
-                                            validate=validate)
+    tasking = tasking_interface.new_tasking(
+        start_datetime=start_datetime, end_datetime=end_datetime, aoi_geojson=json.loads(aoi), recipe=recipe,
+        order_templates=tasking_data, validate=validate
+    )
     click.echo(tasking)
 
 
 @click.command()
-@click.option('--tasking_id', '-t', help='Desired tasking ID')
+@click.option('--tasking_id', '-t', help='Desired tasking ID', required=True)
 def get_tasking_request(tasking_id):
     """
     Get a desired tasking request's information
@@ -1707,8 +1702,8 @@ def get_tasking_request(tasking_id):
 
 
 @click.command()
-@click.option('--tasking_id', '-t', help='Desired tasking ID')
-@click.option('--reason', '-r', help='Reason for tasking cancellation')
+@click.option('--tasking_id', '-t', help='Desired tasking ID', required=True)
+@click.option('--reason', '-r', help='Reason for tasking cancellation', required=True)
 def cancel_tasking(tasking_id, reason):
     """
     Cancels a desired tasking request
@@ -1729,8 +1724,10 @@ def cancel_tasking(tasking_id, reason):
 @click.option('--order_templates', '-o', help='Flag to dictate whether or not to auto-order when monitor is triggered. '
                                               'Defaults to False', is_flag=True, default=False)
 @click.option('--pipeline', '-p', help='Desired ordering pipeline')
-@click.option('--validate', '-v', help='Flag to validate monitor request. Defaults to False', is_flag=True, default=False)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
+@click.option('--validate', '-v', help='Flag to validate monitor request. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
 def create_monitor(start_datetime, end_datetime, description, aoi, match_criteria, notifications, order_templates,
                    pipeline, validate, yes):
     """
@@ -1753,13 +1750,11 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
                         else:
                             aoi = None
                     elif geojson_check.lower() == "y":
-                        aoi = line[8:].strip()
+                        aoi = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and aoi:
-                    aoi = aoi
                 elif yes and not aoi:
-                    aoi = line[8:].strip()
+                    aoi = line.split("=")[1]
                 elif yes and aoi:
                     aoi = aoi
             else:
@@ -1767,7 +1762,8 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
             if "monitor_notifications" in line:
                 if not yes:
                     notifications_check = click.prompt(
-                        "A notifications template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "A notifications template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if notifications_check.lower() == "n":
                         if notifications:
@@ -1775,13 +1771,11 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
                         else:
                             notifications = None
                     elif notifications_check.lower() == "y":
-                        notifications = line[22:].strip()
+                        notifications = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and notifications:
-                    notifications = notifications
                 elif yes and not notifications:
-                    notifications = line[22:].strip()
+                    notifications = line.split("=")[1]
                 elif yes and notifications:
                     notifications = notifications
             else:
@@ -1789,7 +1783,8 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
             if "match_criteria" in line:
                 if not yes:
                     criteria_check = click.prompt(
-                        "A match criteria has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "A match criteria has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if criteria_check.lower() == "n":
                         if match_criteria:
@@ -1797,13 +1792,11 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
                         else:
                             match_criteria = None
                     elif criteria_check.lower() == "y":
-                        match_criteria = line[15:].strip()
+                        match_criteria = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and match_criteria:
-                    match_criteria = match_criteria
                 elif yes and not match_criteria:
-                    match_criteria = line[15:].strip()
+                    match_criteria = line.split("=")[1]
                 elif yes and match_criteria:
                     match_criteria = match_criteria
             else:
@@ -1826,7 +1819,8 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
             if "order_settings" in config_dict.keys():
                 if not yes:
                     settings_check = click.prompt(
-                        "An order settings template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "An order settings template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if settings_check.lower() == "n":
                         settings = click.prompt("Enter monitor order settings")
@@ -1851,7 +1845,8 @@ def create_monitor(start_datetime, end_datetime, description, aoi, match_criteri
             if "output_settings" in config_dict.keys():
                 if not yes:
                     output_config_check = click.prompt(
-                        "An output config template has been found in the .MGP-config file. Would you like to use this template?[y/n]"
+                        "An output config template has been found in the .MGP-config file. Would you like to use this "
+                        "template?[y/n]"
                     )
                     if output_config_check.lower() == "n":
                         output_config = click.prompt("Enter output config")
@@ -1934,7 +1929,9 @@ def toggle_monitor(monitor_id, enable, disable):
     """
 
     monitoring_interface = _monitoring()
-    if enable:
+    if enable and disable:
+        raise Exception("Either enable or disable must be called, not both")
+    elif enable:
         toggle = monitoring_interface.toggle_monitor_status(monitor_id=monitor_id, status='enable')
     elif disable:
         toggle = monitoring_interface.toggle_monitor_status(monitor_id=monitor_id, status='disable')
@@ -1945,7 +1942,7 @@ def toggle_monitor(monitor_id, enable, disable):
 
 @click.command()
 @click.option('--script_id', '-s', help='Desired raster script name', required=True)
-@click.option('--function', '-f', help='Desired raster function')
+@click.option('--function', '-f', help='Desired raster function', required=True)
 @click.option('--collect_id', '-cid', help='Desired collect ID for the raster object', required=True)
 @click.option('--api_token', '-a', help='Your maxar API token', required=True)
 @click.option('--crs', '-c', help='Desired projection for the raster object. Defaults to UTM', default='UTM')
@@ -1976,15 +1973,17 @@ def raster_url(script_id, function, collect_id, api_token, crs, bands, dra, inte
 @click.option('--height', '-h', help='Number of pixels for the returned raster on the y axis', type=int, required=True)
 @click.option('--download', '-d', help='Flag dictating the download of a raster object. Defaults to False',
               is_flag=True, default=False)
-@click.option('--outputpath', '-o', help='Desired output path location for the rasterized object including filename and '
-                                         'extension')
+@click.option('--outputpath', '-o', help='Desired output path location for the rasterized object including filename '
+                                         'and extension')
 def get_raster_array(raster_url, x_off, y_off, width, height, download, outputpath):
     """
     Create a raster array from a rasterized (vsicurl) URL and download the raster locally if specified
     """
 
     analytics_interface = _analytics()
-    ras_array = analytics_interface.get_arrays(raster_url=raster_url, xoff=x_off, yoff=y_off, width=width, height=height)
+    ras_array = analytics_interface.get_arrays(
+        raster_url=raster_url, xoff=x_off, yoff=y_off, width=width, height=height
+    )
     if not download:
         click.echo(ras_array)
     else:
@@ -1995,13 +1994,15 @@ def get_raster_array(raster_url, x_off, y_off, width, height, download, outputpa
 @click.command()
 @click.option('--layers', '-l', help='Desired vector layer', required=True)
 @click.option('--bbox', '-b', help='Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)')
-@click.option('--srsname', '-srs', help='Desired projection NOTE:(WFS for vector data currently only supports EPSG:3857). '
-                                        'Defaults to EPSG:3857', default='EPSG:3857')
+@click.option('--srsname', '-srs', help='Desired projection NOTE:(WFS for vector data currently only supports '
+                                        'EPSG:3857). Defaults to EPSG:3857', default='EPSG:3857')
 @click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
 @click.option('--shapefile', '-s', help='Binary of whether to return as shapefile format. Defaults to False',
               is_flag=True, default=False)
-@click.option('--csv', '-c', help='Binary of whether to return as a csv format, Defaults to False', is_flag=True, default=False)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
+@click.option('--csv', '-c', help='Binary of whether to return as a csv format, Defaults to False', is_flag=True,
+              default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
 def vector_search(layers, bbox, srsname, filter, shapefile, csv, yes):
     """
     Search vector layers
@@ -2021,15 +2022,13 @@ def vector_search(layers, bbox, srsname, filter, shapefile, csv, yes):
                         if bbox:
                             bbox = bbox
                         else:
-                            bbox = None
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
@@ -2051,11 +2050,13 @@ def vector_search(layers, bbox, srsname, filter, shapefile, csv, yes):
 @click.option('--srsname', '-srs', help='Desired projection. Defaults to EPSG:4326', default='EPSG:4326')
 @click.option('--height', '-h', help='The vertical number of pixels to return. Defaults to 512', default=512)
 @click.option('--width', '-w', help='The horizontal number of pixels to return. Defaults to 512', default=512)
-@click.option('--img_format', '-i', help='The format of the response image either jpeg, png or geotiff')
+@click.option('--img_format', '-i', help='The format of the response image either jpeg, png or geotiff. Defaults to '
+                                         'jpeg', default='jpeg')
 @click.option('--outputpath', '-o', help='Output path must include output format. Downloaded path default is '
-                                           'user home path', default=None)
+                                         'user home path', default=None)
 @click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
 def vector_image_download(layers, bbox, srsname, height, width, img_format, outputpath, filter, yes):
     """
      Download a vector image
@@ -2075,15 +2076,13 @@ def vector_image_download(layers, bbox, srsname, height, width, img_format, outp
                         if bbox:
                             bbox = bbox
                         else:
-                            bbox = None
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
@@ -2105,11 +2104,12 @@ def vector_image_download(layers, bbox, srsname, height, width, img_format, outp
 @click.option('--layers', '-l', help='Desired vector layer', required=True)
 @click.option('--zoom', '-z', help='Desired zoom level between 1 and 20', type=int, required=True)
 @click.option('--bbox', '-b', help='Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)')
-@click.option('--srsname', '-srs', help='Desired projection NOTE:(WFS for vector data currently only supports EPSG:4326). '
-                                        'Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--srsname', '-srs', help='Desired projection NOTE:(WMTS for vector data currently only supports '
+                                        'EPSG:4326). Defaults to EPSG:4326', default='EPSG:4326')
 @click.option('--outputpath', '-o', help='Output path must include output format. Downloaded path default is '
-                                           'user home path', default=None)
-@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True, default=False)
+                                         'user home path', default=None)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
 def vector_tile_download(layers, zoom, bbox, srsname, outputpath, yes):
     """
     Download vector tiles
@@ -2129,15 +2129,13 @@ def vector_tile_download(layers, zoom, bbox, srsname, outputpath, yes):
                         if bbox:
                             bbox = bbox
                         else:
-                            bbox = None
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
                     elif bbox_check.lower() == "y":
-                        bbox = line[5:].strip()
+                        bbox = line.split("=")[1]
                     else:
                         return click.echo("Invalid input. Please run command again and enter either y or n")
-                elif not yes and bbox:
-                    bbox = bbox
                 elif yes and not bbox:
-                    bbox = line[5:].strip()
+                    bbox = line.split("=")[1]
                 elif yes and bbox:
                     bbox = bbox
             else:
@@ -2149,10 +2147,371 @@ def vector_tile_download(layers, zoom, bbox, srsname, outputpath, yes):
 
 
 @click.command()
-@click.option('--variables', '-v', type=click.Choice(['order_settings', 'bbox', 'output_config',
-                                                      'notifications_settings', 'geojson', 'monitor_notifications',
-                                                      'tasking_template', 'match_criteria']), multiple=True,
-              help="Variables for storage")
+@click.option('--bbox', '-b', help='Bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)')
+@click.option('--srsname', '-srs', help='Desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
+@click.option('--layer', '-l', help='Desired basemap layer. Defaults to VIVID_BASIC', default='VIVID_BASIC')
+@click.option('--shapefile', '-shp', help='Binary of whether or not to return as shapefile format', type=bool)
+@click.option('--csv', '-c', help='Binary of whether to return as a csv format, Defaults to False', is_flag=True,
+              default=False)
+@click.option('--seamlines', '-s', help='Binary to search seamlines data. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--featureprofile', '-fp', help='String of the desired stacking profile')
+@click.option('--typename', '-t', help='String of the desired type name')
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def basemaps_search(bbox, srsname, filter, layer, shapefile, csv, seamlines, featureprofile, typename, yes):
+    """
+    Searches an AOI using the WFS method and returns a list of basemap features and their metadata that intersect with
+    the AOI
+    """
+
+    basemaps_interface = _basemaps()
+    home_dir = os.path.expanduser("~")
+    with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if "bbox" in line:
+                if not yes:
+                    bbox_check = click.prompt(
+                        "A bbox has been found in the .MGP-config file. Would you like to use this "
+                        "bbox?[y/n]")
+                    if bbox_check.lower() == "n":
+                        if bbox:
+                            bbox = bbox
+                        else:
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                    elif bbox_check.lower() == "y":
+                        bbox = line.split("=")[1]
+                    else:
+                        return click.echo("Invalid input. Please run command again and enter either y or n")
+                elif yes and not bbox:
+                    bbox = line.split("=")[1]
+                elif yes and bbox:
+                    bbox = bbox
+            else:
+                bbox = bbox
+    layer_options = ['VIVID_BASIC', 'VIVID_ADVANCED', 'VIVID_STANDARD', 'VIVID_STANDARD_30', 'VIVID_PREMIUM']
+    if layer not in layer_options:
+        raise Exception("{} is not a valid basemap layer option".format(layer))
+    if seamlines:
+        product_name = "product_name='{}'".format(layer)
+    else:
+        product_name = "productName='{}'".format(layer)
+    if filter:
+        combined_filter = "({})AND({})".format(product_name, filter)
+        params = {
+            "bbox": bbox, "srsname": srsname, "filter": combined_filter, "shapefile": shapefile, "csv": csv,
+            "seamlines": seamlines, "featureprofile": featureprofile, "typename": typename
+        }
+    else:
+        params = {
+            "bbox": bbox, "srsname": srsname, "filter": product_name, "shapefile": shapefile, "csv": csv,
+            "seamlines": seamlines, "featureprofile": featureprofile, "typename": typename
+        }
+    not_none_params = {k: v for k, v in params.items() if v is not None}
+    search = basemaps_interface.search(**not_none_params)
+    click.echo(search)
+
+
+@click.command()
+@click.option('--bbox', '-b',
+              help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
+@click.option('--srsname', '-srs', help='Desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--layer', '-l', help='Desired basemap layer. Defaults to VIVID_BASIC', default='VIVID_BASIC')
+@click.option('--height', '-h', help='Integer value representing the vertical number of pixels to return', type=int)
+@click.option('--width', '-w', help='Integer value representing the horizontal number of pixels to return', type=int)
+@click.option('--img_format', '-img', help='String of the format of the response image either jpeg, png or geotiff. '
+                                           'Defaults to jpeg', type=str, default='jpeg')
+@click.option('--zoom_level', '-z', help='Integer value of the zoom level. Used for WMTS', type=int)
+@click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
+@click.option('--outputpath', '-o', help='Path to desired download location')
+@click.option('--seamlines', '-s', help='Binary to search seamlines data. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def basemaps_download(bbox, srsname, layer, height, width, img_format, zoom_level, filter, outputpath, seamlines, yes):
+    """
+    Downloads an image or a list of image calls and returns the file location of the download. NOTE: Structure
+    of call should be structured with one of the following: 1) bbox, zoom_level, img_format; 2) bbox, img_format, height, width
+    """
+
+    basemaps_interface = _basemaps()
+    if not outputpath:
+        home_dir = os.path.expanduser("~")
+        outputpath = os.path.join(home_dir, "CLI_download.{}".format(img_format))
+    layer_options = ['VIVID_BASIC', 'VIVID_ADVANCED', 'VIVID_STANDARD', 'VIVID_STANDARD_30', 'VIVID_PREMIUM']
+    if layer not in layer_options:
+        raise Exception("{} is not a valid basemap layer option".format(layer))
+    if seamlines:
+        product_name = "product_name='{}'".format(layer)
+    else:
+        product_name = "productName='{}'".format(layer)
+    if zoom_level:
+        home_dir = os.path.expanduser("~")
+        with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if "bbox" in line:
+                    if not yes:
+                        bbox_check = click.prompt(
+                            "A bbox has been found in the .MGP-config file. Would you like to use this "
+                            "bbox?[y/n]")
+                        if bbox_check.lower() == "n":
+                            if bbox:
+                                bbox = bbox
+                            else:
+                                return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                        elif bbox_check.lower() == "y":
+                            bbox = line.split("=")[1]
+                        else:
+                            return click.echo("Invalid input. Please run command again and enter either y or n")
+                    elif yes and not bbox:
+                        bbox = line.split("=")[1]
+                    elif yes and bbox:
+                        bbox = bbox
+                else:
+                    bbox = bbox
+            if filter:
+                combined_filter = "({})AND({})".format(product_name, filter)
+                wmts = basemaps_interface.download_image(zoom_level=zoom_level, bbox=bbox, img_format=img_format,
+                                                         srsname=srsname, download=True, outputpath=outputpath,
+                                                         seamlines=seamlines, filter=combined_filter)
+            else:
+                wmts = basemaps_interface.download_image(zoom_level=zoom_level, bbox=bbox, img_format=img_format,
+                                                         srsname=srsname, download=True, outputpath=outputpath,
+                                                         seamlines=seamlines, filter=product_name)
+        click.echo(wmts)
+    else:
+        if not img_format or not width or not height:
+            raise Exception('height/width must have an img_format')
+        else:
+            home_dir = os.path.expanduser("~")
+            with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    if "bbox" in line:
+                        if not yes:
+                            bbox_check = click.prompt(
+                                "A bbox has been found in the .MGP-config file. Would you like to use this "
+                                "bbox?[y/n]")
+                            if bbox_check.lower() == "n":
+                                if bbox:
+                                    bbox = bbox
+                                else:
+                                    return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                            elif bbox_check.lower() == "y":
+                                bbox = line.split("=")[1]
+                            else:
+                                return click.echo("Invalid input. Please run command again and enter either y or n")
+                        elif yes and not bbox:
+                            bbox = line.split("=")[1]
+                        elif yes and bbox:
+                            bbox = bbox
+                    else:
+                        bbox = bbox
+            if filter:
+                combined_filter = "({})AND({})".format(product_name, filter)
+                wms = basemaps_interface.download_image(bbox=bbox, img_format=img_format, height=height, width=width,
+                                                        srsname=srsname, display=False, download=True,
+                                                        outputpath=outputpath, seamlines=seamlines,
+                                                        filter=combined_filter)
+            else:
+                wms = basemaps_interface.download_image(bbox=bbox, img_format=img_format, height=height, width=width,
+                                                        srsname=srsname, display=False, download=True,
+                                                        outputpath=outputpath, seamlines=seamlines,
+                                                        filter=product_name)
+        click.echo(wms)
+
+
+@click.command()
+@click.option('--bbox', '-b',
+              help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)')
+@click.option('--zoom_level', '-z', help='Integer value of the zoom level. Used for WMTS', type=int)
+@click.option('--srsname', '-srs', help='Desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--seamlines', '-s', help='Binary to search seamlines data. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def basemaps_tile_list(bbox, zoom_level, srsname, seamlines, filter, yes):
+    """
+    Return a list of tiles and their associated requests
+    """
+
+    basemaps_interface = _basemaps()
+    home_dir = os.path.expanduser("~")
+    with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if "bbox" in line:
+                if not yes:
+                    bbox_check = click.prompt(
+                        "A bbox has been found in the .MGP-config file. Would you like to use this "
+                        "bbox?[y/n]")
+                    if bbox_check.lower() == "n":
+                        if bbox:
+                            bbox = bbox
+                        else:
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                    elif bbox_check.lower() == "y":
+                        bbox = line.split("=")[1]
+                    else:
+                        return click.echo("Invalid input. Please run command again and enter either y or n")
+                elif yes and not bbox:
+                    bbox = line.split("=")[1]
+                elif yes and bbox:
+                    bbox = bbox
+            else:
+                bbox = bbox
+    params = {
+        "bbox": bbox, "zoom_level": zoom_level, "srsname": srsname, "filter": filter, "seamlines": seamlines
+    }
+    not_none_params = {k: v for k, v in params.items() if v is not None}
+    tile_list = basemaps_interface.get_tile_list_with_zoom(**not_none_params)
+    click.echo(tile_list)
+
+
+@click.command()
+@click.option('--bbox', '-b',
+              help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)')
+@click.option('--zoom_level', '-z', help='Integer value of the zoom level. Used for WMTS', type=int, required=True)
+@click.option('--srsname', '-srs', help='Desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--layer', '-l', help='Desired basemap layer. Defaults to VIVID_BASIC', default='VIVID_BASIC')
+@click.option('--img_format', '-img', help='String of the format of the response image either jpeg, png or geotiff. '
+                                           'Defaults to jpeg', default='jpeg')
+@click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
+@click.option('--outputpath', '-o', help='Output path must include output format. Downloaded path default is user home '
+                                         'path', default=None)
+@click.option('--seamlines', '-s', help='Binary to search seamlines data. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def basemaps_download_tiles(bbox, zoom_level, srsname, layer, img_format, filter, outputpath, seamlines, yes):
+    """
+    Download basemap tiles over a given AOI
+    """
+
+    basemaps_interface = _basemaps()
+    home_dir = os.path.expanduser("~")
+    with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if "bbox" in line:
+                if not yes:
+                    bbox_check = click.prompt(
+                        "A bbox has been found in the .MGP-config file. Would you like to use this "
+                        "bbox?[y/n]")
+                    if bbox_check.lower() == "n":
+                        if bbox:
+                            bbox = bbox
+                        else:
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                    elif bbox_check.lower() == "y":
+                        bbox = line.split("=")[1]
+                    else:
+                        return click.echo("Invalid input. Please run command again and enter either y or n")
+                elif yes and not bbox:
+                    bbox = line.split("=")[1]
+                elif yes and bbox:
+                    bbox = bbox
+            else:
+                bbox = bbox
+    layer_options = ['VIVID_BASIC', 'VIVID_ADVANCED', 'VIVID_STANDARD', 'VIVID_STANDARD_30', 'VIVID_PREMIUM']
+    if layer not in layer_options:
+        raise Exception("{} is not a valid basemap layer option".format(layer))
+    if seamlines:
+        product_name = "product_name='{}'".format(layer)
+    else:
+        product_name = "productName='{}'".format(layer)
+    if filter:
+        combined_filter = "({})AND({})".format(product_name, filter)
+        tiles = basemaps_interface.download_tiles(
+            bbox=bbox, zoom_level=zoom_level, srsname=srsname, img_format=img_format, filter=combined_filter,
+            outputpath=outputpath, seamlines=seamlines
+        )
+    else:
+        tiles = basemaps_interface.download_tiles(
+            bbox=bbox, zoom_level=zoom_level, srsname=srsname, img_format=img_format, filter=product_name,
+            outputpath=outputpath, seamlines=seamlines
+        )
+    click.echo(tiles)
+
+
+@click.command()
+@click.option('--bbox', '-b',
+              help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)')
+@click.option('--height', '-h', help='Integer value representing the vertical number of pixels to return', type=int,
+              required=True)
+@click.option('--width', '-w', help='Integer value representing the horizontal number of pixels to return', type=int,
+              required=True)
+@click.option('--srsname', '-srs', help='Desired projection. Defaults to EPSG:4326', default='EPSG:4326')
+@click.option('--layer', '-l', help='Desired basemap layer. Defaults to VIVID_BASIC', default='VIVID_BASIC')
+@click.option('--img_format', '-img', help='String of the format of the response image either jpeg, png or geotiff. '
+                                           'Defaults to jpeg', default='jpeg')
+@click.option('--filter', '-f', help='CQL filter used to refine data of search. Defaults to None', default=None)
+@click.option('--outputpath', '-o', help='Output path must include output format. Downloaded path default is user home '
+                                         'path', default=None)
+@click.option('--seamlines', '-s', help='Binary to search seamlines data. Defaults to False', is_flag=True,
+              default=False)
+@click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
+              default=False)
+def basemaps_image_by_pixel_count(bbox, height, width, srsname, layer, img_format, filter, outputpath, seamlines, yes):
+    """
+    Download a basemap image over a given AOI
+    """
+
+    basemaps_interface = _basemaps()
+    home_dir = os.path.expanduser("~")
+    with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if "bbox" in line:
+                if not yes:
+                    bbox_check = click.prompt(
+                        "A bbox has been found in the .MGP-config file. Would you like to use this "
+                        "bbox?[y/n]")
+                    if bbox_check.lower() == "n":
+                        if bbox:
+                            bbox = bbox
+                        else:
+                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                    elif bbox_check.lower() == "y":
+                        bbox = line.split("=")[1]
+                    else:
+                        return click.echo("Invalid input. Please run command again and enter either y or n")
+                elif yes and not bbox:
+                    bbox = line.split("=")[1]
+                elif yes and bbox:
+                    bbox = bbox
+            else:
+                bbox = bbox
+    layer_options = ['VIVID_BASIC', 'VIVID_ADVANCED', 'VIVID_STANDARD', 'VIVID_STANDARD_30', 'VIVID_PREMIUM']
+    if layer not in layer_options:
+        raise Exception("{} is not a valid basemap layer option".format(layer))
+    if seamlines:
+        product_name = "product_name='{}'".format(layer)
+    else:
+        product_name = "productName='{}'".format(layer)
+    if filter:
+        combined_filter = "({})AND({})".format(product_name, filter)
+        wms = basemaps_interface.download_image_by_pixel_count(
+            bbox=bbox, height=height, width=width, srsname=srsname, img_format=img_format, outputpath=outputpath,
+            seamlines=seamlines, filter=combined_filter
+        )
+    else:
+        wms = basemaps_interface.download_image_by_pixel_count(
+            bbox=bbox, height=height, width=width, srsname=srsname, img_format=img_format, outputpath=outputpath,
+            seamlines=seamlines, filter=product_name
+        )
+    click.echo(wms)
+
+
+@click.command()
+@click.option('--variables', '-v', type=click.Choice(
+    ['order_settings', 'bbox', 'output_config', 'notifications_settings', 'geojson', 'monitor_notifications',
+     'tasking_template', 'match_criteria']
+), multiple=True, help="Variables for storage")
 def store_variables(variables):
     """
     \b
@@ -2238,8 +2597,11 @@ def store_variables(variables):
                     order_format = '\norder_settings={}'
                 for line in lines:
                     if "order_settings" in line:
-                        lines_to_write.append("{}{}{}{}{}".format(order_format, "{",'"settings":{}'.format(var_order_settings),"}", '\n'))
-                        #lines_to_write.append(order_format.format(var_order_settings))
+                        lines_to_write.append(
+                            "{}{}{}{}{}".format(
+                                order_format, "{", '"settings":{}'.format(var_order_settings), "}", '\n'
+                            )
+                        )
                         order_overwrite = True
                     else:
                         lines_to_write.append(line)
@@ -2262,9 +2624,10 @@ def store_variables(variables):
                 for line in lines:
                     if "output_settings" in line:
                         lines_to_write.append(
-                            "{}{}{}{}{}".format(config_format, "{", '"output_config":{}'.format(var_output_config), "}",
-                                                '\n'))
-                        # lines_to_write.append(config_format.format(var_output_config))
+                            "{}{}{}{}{}".format(
+                                config_format, "{", '"output_config":{}'.format(var_output_config), "}", '\n'
+                            )
+                        )
                         config_overwrite = True
                     else:
                         lines_to_write.append(line)
@@ -2287,8 +2650,8 @@ def store_variables(variables):
                 for line in lines:
                     if "notifications_settings" in line:
                         lines_to_write.append(
-                            "{}{}{}".format(notifications_format,' [{}]'.format(var_notifications_settings), '\n'))
-                        # lines_to_write.append(notifications_format.format(var_notifications_settings))
+                            "{}{}{}".format(notifications_format, ' [{}]'.format(var_notifications_settings), '\n')
+                        )
                         notifications_overwrite = True
                     else:
                         lines_to_write.append(line)
@@ -2319,7 +2682,9 @@ def store_variables(variables):
             elif item == "monitor_notifications":
                 for line in lines:
                     if "monitor_notifications" in line:
-                        monitor_notification_check = input("A monitor notification is already stored. Overwrite?[y/n]: ")
+                        monitor_notification_check = input(
+                            "A monitor notification is already stored. Overwrite?[y/n]: "
+                        )
                         if monitor_notification_check.lower() == "n":
                             return click.echo("Variable storage aborted")
                         elif monitor_notification_check.lower() == "y":
@@ -2333,8 +2698,8 @@ def store_variables(variables):
                 for line in lines:
                     if "monitor_notifications" in line:
                         lines_to_write.append(
-                            "{}{}{}".format(monitor_notification_format, '[{}]'.format(var_monitor_notifications),'\n'))
-                        # lines_to_write.append(monitor_notification_format.format(var_monitor_notifications))
+                            "{}{}{}".format(monitor_notification_format, '[{}]'.format(var_monitor_notifications), '\n')
+                        )
                         monitor_notifications_overwrite = True
                     else:
                         lines_to_write.append(line)
@@ -2357,8 +2722,8 @@ def store_variables(variables):
                 for line in lines:
                     if "tasking_template" in line:
                         lines_to_write.append(
-                            "{}{}{}".format(tasking_template_format, '{}'.format(var_tasking_template), '\n'))
-                        # lines_to_write.append(tasking_template_format.format(var_tasking_template))
+                            "{}{}{}".format(tasking_template_format, '{}'.format(var_tasking_template), '\n')
+                        )
                         tasking_template_overwrite = True
                     else:
                         lines_to_write.append(line)
@@ -2366,7 +2731,7 @@ def store_variables(variables):
                     lines_to_write.append(tasking_template_format.format(var_tasking_template))
             elif item == "match_criteria":
                 for line in lines:
-                    if "mathc_criteria" in line:
+                    if "match_criteria" in line:
                         match_criteria_check = input("A match criteria is already stored. Overwrite?[y/n]: ")
                         if match_criteria_check.lower() == "n":
                             return click.echo("Variable storage aborted")
@@ -2462,4 +2827,9 @@ cli.add_command(get_raster_array)
 cli.add_command(vector_search)
 cli.add_command(vector_image_download)
 cli.add_command(vector_tile_download)
+cli.add_command(basemaps_search)
+cli.add_command(basemaps_download)
+cli.add_command(basemaps_tile_list)
+cli.add_command(basemaps_download_tiles)
+cli.add_command(basemaps_image_by_pixel_count)
 cli.add_command(store_variables)

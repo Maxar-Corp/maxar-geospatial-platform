@@ -38,7 +38,9 @@ def _response_handler(response):
     elif 'Exception' in response.text:
         raise Exception(response.url, response.text)
     else:
-        raise Exception("Non-200 response {} received for {}".format(response.status_code, response.url))
+        raise Exception(
+            "Non-200 response {} received for {} \n{}".format(response.status_code, response.url, response.text)
+        )
     # if response.status_code != 200:
     #     raise Exception("Non-200 response received for {}.".format(response.url))
     # elif 'Exception' in response.text:

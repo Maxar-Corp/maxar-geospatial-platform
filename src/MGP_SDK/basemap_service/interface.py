@@ -1,34 +1,13 @@
-from MGP_SDK.basemap_service.basemaps import Basemaps
+from MGP_SDK.auth.auth import Auth
 from MGP_SDK.OGC_Spec.interface import OgcInterface
 
 
 class Interface:
 
-    def __init__(self, auth):
+    def __init__(self, auth: Auth):
         self.auth = auth
-        self.basemaps = Basemaps(self.auth)
         self.ogc = OgcInterface(self.auth, 'basemaps_ogc')
         self.seamlines = OgcInterface(self.auth, 'basemaps_seamlines')
-
-    def get_available_basemaps(self):
-        """
-        Get a list of all available basemaps and their information
-        Returns:
-            Dictionary of available basemaps and their information
-        """
-
-        return self.basemaps.get_available_basemaps()
-
-    def get_basemap_details(self, basemap_id: str):
-        """
-        Get the information of a desired basemap by utilizing the basemap's ID
-        Args:
-            basemap_id (string) = Identifier of the desired basemap. Comma separated for multiple IDs
-        Returns:
-            Dictionary of a desired basemap's details
-        """
-
-        return self.basemaps.get_basemap_details(basemap_id)
 
     def search(self, bbox: str = None, srsname: str = "EPSG:4326", filter: str = None, shapefile: bool = False,
                csv: bool = False, seamlines=False, **kwargs):
