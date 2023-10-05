@@ -56,6 +56,7 @@ nav:
         - 'CLI Commands/cli_commands.md'
         - 'CLI Commands/account_service_cli.md'
         - 'CLI Commands/analytics_service_cli.md'
+        - 'CLI Commands/basemaps_cli.md'
         - 'CLI Commands/discovery_service_cli.md'
         - 'CLI Commands/monitor_service_cli.md'
         - 'CLI Commands/order_service_cli.md'
@@ -63,6 +64,7 @@ nav:
         - 'CLI Commands/tasking_service_cli.md'
         - 'CLI Commands/token_service_cli.md'
         - 'CLI Commands/usage_service_cli.md'
+        
 #    - Maxar QGIS Plugin:
 #        - Maxar Portal Connect: 'MaxarPortalConnect/index.md'
 #        - Log In: 'MaxarPortalConnect/Log_In.md'

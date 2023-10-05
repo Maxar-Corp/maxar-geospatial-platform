@@ -1,5 +1,13 @@
 # Release Notes
 
+## Version 1.2.2 (Oct 5, 2023)
+* Changes from v1.2.1 weren't updated correctly in PyPi and github. No other changes
+
+## Version 1.2.1 (Oct 4, 2023)
+* Added CLI commands for basemaps
+* Added additional Jupyter notebook examples for basemaps
+* Fixed bug with discovery service stac search
+
 ## Version 1.2.0 (Sep 7, 2023)
 * Added functionality to download_image() that will download wmts tiles instead of returning a list of WMTS calls to make
 * Added CLI commands for variable storage, admin, streaming, usage, ordering, discovery, analytics and monitoring

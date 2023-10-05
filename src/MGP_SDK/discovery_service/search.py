@@ -1,4 +1,5 @@
 import requests
+import json
 from datetime import datetime
 from MGP_SDK import process
 from MGP_SDK.auth.auth import Auth
@@ -30,7 +31,8 @@ class Search:
         """
 
         if 'bbox' in kwargs.keys() and 'intersects' in kwargs.keys():
-            raise Exception('When performing a spatial search specify either "bbox" or "intersects" not both.')
+            if kwargs['bbox'] != None and kwargs['intersects'] != None:
+                raise Exception('When performing a spatial search specify either "bbox" or "intersects" not both.')
         if 'datetime' in kwargs.keys():
             try:
                 date1, date2 = kwargs['datetime'].split('/')
@@ -43,6 +45,11 @@ class Search:
                     raise Exception('datetime not in ISO 8601 format or date range not separated by a \'/\'')
         params_list = ['bbox', 'datetime', 'ids', 'collections', 'intersects', 'where', 'orderby', 'limit']
         params = {**{k: v for k, v in kwargs.items() if k in params_list}}
+        if 'intersects' in params:
+            if type(params['intersects']) == bytes:
+                pass
+            else:
+                params['intersects'] = json.dumps(params['intersects']).encode('utf-8')
         url = self.base_url
         response = requests.get(url, params=params, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)

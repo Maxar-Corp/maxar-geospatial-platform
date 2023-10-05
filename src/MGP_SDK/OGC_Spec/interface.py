@@ -107,7 +107,7 @@ class OgcInterface:
             if not bbox:
                 raise Exception('zoom_level must have a bbox')
             else:
-                wmts_download = self.download_tiles(bbox=bbox,zoom_level=zoom_level,srsname=srsname,img_format=img_format,outputpath=outputpath,display=display)
+                wmts_download = self.download_tiles(bbox=bbox,zoom_level=zoom_level,srsname=srsname,img_format=img_format,outputpath=outputpath,display=display, **kwargs)
                 return wmts_download
         else:
             if not bbox or not img_format or not width or not height:
