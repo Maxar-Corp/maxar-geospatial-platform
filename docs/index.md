@@ -1,4 +1,4 @@
-# Maxar Geospatial Platform
+# Maxar Geospatial Platform - Python SDK
 
 ## Getting started
 
