@@ -242,10 +242,10 @@ def reset_password(password):
         return click.echo("No .MGP-config file found. Please create file")
     password = click.prompt('Enter new password', hide_input=True, confirmation_prompt=True)
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
-        text = f.readlines()
-        text[2] = 'user_password={}\n'.format(password)
-        with open(os.path.join(home_dir, ".MGP-config"), 'w') as f:
-            f.writelines(text)
+        text = [i.replace('\n','') for i in f.readlines()]
+        text[2] = f'user_password={password}'
+        with open(os.path.join(home_dir, ".MGP-config"), 'w') as w:
+            w.write('\n'.join([i.replace('\n','\\n') for i in text]))
     return click.echo("Password updated")
 
 

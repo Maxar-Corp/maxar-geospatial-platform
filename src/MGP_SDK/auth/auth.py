@@ -1,8 +1,8 @@
 import json
-
+import warnings
 import requests
 import os
-
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 class Auth:
     """
@@ -26,11 +26,12 @@ class Auth:
         self.base_url = "https://account.maxar.com"
         self.api_base_url = "https://api.maxar.com"
         self.username = username
-        self.password = password
+        if password:
+            self.password = bytes(password, 'utf-8').decode('unicode_escape')
         self.client_id = client_id
         self.access = None
         self.refresh = None
-        self.version = "Python1.2.2"
+        self.version = "Python1.2.3"
         self.api_version = 'v1'
         self.SSL = True
 
@@ -42,10 +43,6 @@ class Auth:
                 self.username, self.password, self.client_id = self._get_environment(full_path)
             else:
                 raise ValueError("Please create .MGP-config in home dir.")
-        # else:
-        #     acceptable_urls = ['https://marianas-test.dev.gcsdev.com']
-        #     if self.base_url not in acceptable_urls:
-        #         raise ValueError("Base_url must match acceptable SecureWatch 3 URL.")
 
         #checks for auth when the class is instantiated and assigns tokens to the self.access and self.refresh
         self.refresh_token()
@@ -70,7 +67,7 @@ class Auth:
             raise Exception('.MGP-config not formatted properly')
         else:
             user_name = cred_dict['user_name']
-            password = cred_dict['user_password']
+            password = bytes(cred_dict['user_password'], 'utf-8').decode('unicode_escape')
             client_id = cred_dict['client_id']
             return user_name, password, client_id
 

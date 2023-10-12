@@ -1,7 +1,10 @@
 # Release Notes
 
+## Version 1.2.3 (Oct 12, 2023)
+* Added password parsing to allow special characters
+
 ## Version 1.2.2 (Oct 5, 2023)
-* Changes from v1.2.1 weren't updated correctly in PyPi and github. No other changes
+* No changes, updating documentation and github
 
 ## Version 1.2.1 (Oct 4, 2023)
 * Added CLI commands for basemaps
