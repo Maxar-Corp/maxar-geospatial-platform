@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
+
 class RasterAnalytics:
     def __init__(self, auth: Auth):
         self.auth = auth
@@ -23,58 +24,6 @@ class RasterAnalytics:
         except:
             raise Exception("Gdal not found on this machine")
 
-    def _parameters_formatter(self,params:list):
-        return "&".join(["p=" + param for param in params])
-
-    def get_image_metadata(self, function:str, script_id:str, **kwargs):
-        """
-        Get metadata about an image given an IPE resource ID, function name, and parameters.
-        Args:
-        :param function: String of The function to process. ex pansharp
-        :param script_id: String of Desired script ID
-
-        Kwargs:
-        :param function_parameters: list of The function parameters if required. Ex ["catalogID=10400100655F5400","crs=EPSG:4326","ancillaryType=refined"]
-        :return: response json object containing the metadata about an image
-        """
-        if "function_parameters" in kwargs.keys():
-            if type(kwargs["function_parameters"] != list):
-                raise Exception("function_parameters needs to be a list of the paramaters. EX: ['catalogID=10400100655F5400','crs=EPSG:4326','ancillaryType=refined']")
-            formatted_params = self._parameters_formatter(kwargs["function_parameters"])
-            url = f"{self.base_url}/{script_id}/metadata?function={function}&{formatted_params}&maxar_api_token={self.token_service_token}"
-        else:
-            url = f"{self.base_url}/{script_id}/metadata?function={function}&maxar_api_token={self.token_service_token}"
-        response = requests.get(url, verify=self.auth.SSL)
-        return process._response_handler(response)
-
-    def get_byte_range(self,function:str, script_id:str, prefetch:bool = True, head_request:bool = False, **kwargs):
-        """
-        Returns a virtual image as GeoTIFF given a script ID, function name, function parameters
-        (provided as url query parameters), and a valid byte range.
-        Args:
-        :param function: String of The function to process. ex pansharp
-        :param script_id: String of Desired script ID
-        :param prefetch: Prefetching true or false. Default is true
-        :param head_request: Boolean of if you would like this to be a HEAD http request instead of a GET to return only
-         response headers
-
-        Kwargs:
-        :param function_parameters: list of The function parameters if required. Ex ["catalogID=10400100655F5400","crs=EPSG:4326","ancillaryType=refined"]
-        :return:
-        """
-        if "function_parameters" in kwargs.keys():
-            if type(kwargs["function_parameters"] != list):
-                raise Exception("function_parameters needs to be a list of the paramaters. EX: ['catalogID=10400100655F5400','crs=EPSG:4326','ancillaryType=refined']")
-            formatted_params = self._parameters_formatter(kwargs["function_parameters"])
-            url = f"{self.base_url}/{script_id}/metadata?function={function}&prefetch={prefetch}&{formatted_params}&maxar_api_token={self.token_service_token}"
-        else:
-            url = f"{self.base_url}/{script_id}/metadata?function={function}&prefetch={prefetch}&maxar_api_token={self.token_service_token}"
-        if head_request:
-            response = requests.request("HEAD",url,verify=self.auth.SSL)
-        else:
-            response = requests.get(url, verify=self.auth.SSL)
-        return process._response_handler(response)
-
     def create_raster_url(self, script_id, function, collect_id, api_token, crs='UTM', **kwargs):
         """
         Formats a vsicurl URL to be utilized with further raster functions
@@ -86,14 +35,20 @@ class RasterAnalytics:
             crs (string) = Desired projection. Defaults to UTM
         Kwargs:
             bands (string) = Comma separated string of desired bands. Ex: red,green,blue
-            dra (string) = Binary of whether or not to apply dra to the raster. String of bool (true, false)
+            dra (string) = Binary of whether or not to apply dra to the raster. String of bool (true, false). Defaults
+            to false
             interpolation (string) = Desired resizing or (re)projection from one pixel grid to another
+            acomp (string) = Binary of whether or not to apply atmospheric compensation to the output after hd (if
+            applied) and before dra. String of bool (true, false). Defaults to false
+            hd (string) = Binary of whether or not to apply higher resolution to the output. String of bool (true,
+            false). Defaults to false
         Returns:
             URL formatted with desired parameters and /vsicurl/ prefix
         """
 
         if script_id.lower() == 'browse':
-            function = 'browse'
+            if function != "browse":
+                raise Exception("{} is not a valid function. Please use browse".format(function))
             bands = "red,green,blue"
             for item in kwargs.keys():
                 if item == 'bands':
@@ -104,36 +59,64 @@ class RasterAnalytics:
             dra = "false"
             interp = "MTF"
             bands = "red,green,blue"
+            acomp = "false"
+            hd = "false"
             ortho_functions = ["ortho", "pansharp_ortho"]
             if function not in ortho_functions:
-                raise Exception("{} is not a valid function".format(function))
+                raise Exception("{} is not a valid function. Please use ortho or pansharp_ortho".format(function))
             for item in kwargs.keys():
                 if item == 'dra':
                     dra = kwargs['dra']
                 if item == 'bands':
                     bands = kwargs['bands']
+                if item == 'acomp':
+                    acomp = kwargs['acomp']
+                if item == 'hd':
+                    hd = kwargs['hd']
             if function == "ortho":
                 for item in kwargs.keys():
                     if item == 'interpolation':
                         interp = kwargs['interpolation']
                 vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
                           f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&p=bands=%22{bands}%22&p=interpolation=%22{interp}%22' \
-                          f'&p=dra={dra}&maxar_api_token={api_token}'
+                          f'&p=dra={dra}&p=acomp={acomp}&p=hd={hd}&maxar_api_token={api_token}'
             else:
-                function = 'pansharp_ortho'
                 vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
-                          f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&p=bands=%22{bands}%22&p=dra={dra}&maxar_api_token={api_token}'
+                          f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&p=bands=%22{bands}%22&p=dra={dra}' \
+                          f'&p=acomp={acomp}&p=hd={hd}&maxar_api_token={api_token}'
         elif script_id.lower() == 'ndvi-image':
             ndvi_functions = ["ndvi", "ndvi_dra", "ndvi_colorized"]
             if function not in ndvi_functions:
-                raise Exception("{} is not a valid function".format(function))
-            function = function
+                raise Exception("{} is not a valid function. Please use ndvi, ndvi_dra, or ndvi_colorized".format(function))
             vsi_url = f'/vsicurl/https://api.maxar.com/analytics/v1/raster/{script_id}/geotiff?function={function}' \
                       f'&p=collect_identifier=%22{collect_id}%22&p=crs=%22{crs}%22&maxar_api_token={api_token}'
         else:
             raise Exception(
                 'script_id {} not recognized. Please use browse, ortho-image, or ndvi-image'.format(script_id))
         return vsi_url
+
+    def get_raster_metadata(self, raster_url):
+        """
+        Lists out various metadata information of a desired raster
+        Args:
+            raster_url: (string) = Vsicurl formatted URL of a raster object
+        Returns:
+             Dictionary of various raster metadata information
+        """
+
+        gdal = self._gdal_check()
+        dataset = gdal.Open(raster_url)
+        metadata = dataset.GetMetadata()
+        description = dataset.GetDescription()
+        raster_count = dataset.RasterCount
+        img_width, img_height = dataset.RasterXSize, dataset.RasterYSize
+        geo_transform = dataset.GetGeoTransform()
+        projection = dataset.GetProjection()
+        metadata_dict = {
+            "Metadata": metadata, "Description": description, "Bands Count": raster_count, "Image Width": img_width,
+            "Image Height": img_height, "Spatial Reference": geo_transform, "Projection": projection
+        }
+        return metadata_dict
 
     def fetch_arrays(self, raster_url, xoff, yoff, width, height):
         """
@@ -171,6 +154,7 @@ class RasterAnalytics:
         matplotlib.image.imsave(outputpath, img)
         return "Raster image saved in {}".format(outputpath)
 
+
 class VectorAnalytics:
     def __init__(self, auth: Auth):
         self.auth = auth
@@ -181,7 +165,7 @@ class VectorAnalytics:
         self.token = self.auth.refresh_token()
         self.authorization = {"Authorization": f"Bearer {self.token}"}
 
-    def search(self, layers:str,bbox=None, srsname="EPSG:3857", filter=None, shapefile=False, csv=False):
+    def search(self, layers, bbox=None, srsname="EPSG:3857", filter=None, shapefile=False, csv=False):
         """
         Function searches using the wfs method.
 
@@ -195,9 +179,9 @@ class VectorAnalytics:
         Returns:
             Response is either a list of features or a shapefile of all features and associated metadata.
         """
-        return self.ogc.search(bbox,srsname,filter,shapefile,csv,typename=layers)
+        return self.ogc.search(bbox, srsname, filter, shapefile, csv, typename=layers)
 
-    def get_vector_analytics(self, layers:str,bbox=None, srsname="EPSG:4326", height=None, width=None,
+    def get_vector_analytics(self, layers, bbox=None, srsname="EPSG:4326", height=None, width=None,
                              format="vnd.jpeg-png", outputpath=None, display=False, **kwargs):
         """
         Function downloads the image using the wms method.
@@ -208,7 +192,7 @@ class VectorAnalytics:
             srsname (string) = Desired projection. Defaults to EPSG:4326
             height (int) = The vertical number of pixels to return. Defaults to 512
             width (int) = The horizontal number of pixels to return. Defaults to 512
-            img_format (string) = The format of the response image either jpeg, png or geotiff
+            format (string) = The format of the response image either jpeg, png or geotiff
             outputpath (string) = Output path must include output format. Downloaded path default is user home path.
             display (bool) = Display image in IDE (Jupyter Notebooks only). Default False
         Returns:
@@ -218,8 +202,6 @@ class VectorAnalytics:
         return self.ogc.download_image_by_pixel_count(bbox=bbox, height=height, width=width, srsname=srsname,
                                                       img_format=format, outputpath=outputpath, display=display,
                                                       layers=layers, **kwargs)
-        #return self.ogc.wms.return_image(bbox=bbox, srsname=srsname, height=height, width=width, format=format, layers=layers)
-
 
     def get_vector_tiles(self, layers:str, zoom_level, bbox=None, srsname="EPSG:4326", outputpath=None, display=False):
         """

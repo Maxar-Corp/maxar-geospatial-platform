@@ -1485,16 +1485,14 @@ def order(namespace, name, settings, aoi, output_config, notifications, metadata
     }
     config = json.loads(output_config)
     notifications_dict = json.loads(notifications)
-    if validate:
-        endpoint = "validate"
-    elif estimate:
-        endpoint = "estimate"
+    if estimate:
+        order_request = ordering_interface.place_order(
+            namespace=namespace, name=name, settings=dict_settings, output_config=config, metadata=meta,
+            notifications=notifications_dict)
     else:
-        endpoint = "order"
-    order_request = ordering_interface.place_order(
-        namespace=namespace, name=name, settings=dict_settings, output_config=config, metadata=meta,
-        notifications=notifications_dict, endpoint=endpoint
-    )
+        order_request = ordering_interface.place_order(
+            namespace=namespace, name=name, settings=dict_settings, output_config=config, metadata=meta,
+            notifications=notifications_dict, validate=validate)
     click.echo(order_request)
 
 
@@ -1952,17 +1950,33 @@ def toggle_monitor(monitor_id, enable, disable):
                                   'Defaults to None', default=None)
 @click.option('--interpolation', '-i', help='Desired resizing or (re)projection from one pixel grid to another. '
                                             'Defaults to None', default=None)
-def raster_url(script_id, function, collect_id, api_token, crs, bands, dra, interpolation):
+@click.option('--acomp', '-ac', help='Binary of whether or not to apply atmospheric compensation to the output after'
+                                     'hd (if applied) and before dra. String of bool (true, false). Defaults to None',
+              default=None)
+@click.option('--hd', '-h', help='Binary of whether or not to apply higher resolution to the output. String of bool ('
+                                 'true, false). Defaults to None', default=None)
+def raster_url(script_id, function, collect_id, api_token, crs, bands, dra, interpolation, acomp, hd):
     """
     Return a vsicurl formatted raster URL
     """
 
     analytics_interface = _analytics()
     params = {"script_id": script_id, "function": function, "collect_id": collect_id, "api_token": api_token,
-              "crs": crs, "bands": bands, "dra": dra, "interpolation": interpolation}
+              "crs": crs, "bands": bands, "dra": dra, "interpolation": interpolation, "acomp": acomp, "hd": hd}
     not_none_params = {k: v for k, v in params.items() if v is not None}
     create_url = analytics_interface.raster_url(**not_none_params)
     click.echo(create_url)
+
+
+@click.command()
+@click.option('--raster_url', '-r', help='vsicurl formatted URL of a raster object', required=True)
+def get_raster_metadata(raster_url):
+    """
+    Obtain metadata information for a rasterized object
+    """
+    analytics_interface = _analytics()
+    metadata = analytics_interface.raster_metadata(raster_url)
+    click.echo(metadata)
 
 
 @click.command()
@@ -2823,6 +2837,7 @@ cli.add_command(get_monitor)
 cli.add_command(monitor_events)
 cli.add_command(toggle_monitor)
 cli.add_command(raster_url)
+cli.add_command(get_raster_metadata)
 cli.add_command(get_raster_array)
 cli.add_command(vector_search)
 cli.add_command(vector_image_download)

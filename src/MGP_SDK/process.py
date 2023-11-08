@@ -1,6 +1,7 @@
 import os
 import warnings
 
+import requests
 from pyproj import Transformer
 import shapely.ops as ops
 from shapely.geometry.polygon import Polygon
@@ -12,6 +13,7 @@ import queue
 from concurrent.futures import ThreadPoolExecutor
 from MGP_SDK.auth import auth
 from datetime import datetime
+import xml.etree.ElementTree as ET
 from shapely.validation import make_valid
 
 
@@ -225,19 +227,20 @@ def aoi_coverage(bbox, response):
     aoi_polygon = shapely.geometry.box(
         *(float(box_order[1]), float(box_order[0]), float(box_order[3]), float(box_order[2])), ccw=True)
     for feature in coverage['features']:
-        if feature['geometry']['type'] == 'Polygon':
-            feature_wkt = shapely.wkt.loads("POLYGON (({}))".format(
-                ", ".join([" ".join([str(k) for k in i]) for i in feature['geometry']['coordinates'][0]])))
-            feature_wkt = make_valid(feature_wkt)
-            feature['coverage'] = aoi_polygon.intersection(feature_wkt).area / feature_wkt.area
-            feature['bbox_coverage'] = feature_wkt.intersection(aoi_polygon).area / aoi_polygon.area
-        else:
-            feature_wkt = shapely.wkt.loads("MULTIPOLYGON ({})".format(", ".join(
-                ["(({}))".format(", ".join([" ".join([str(k) for k in i]) for i in l[0]])) for l in
-                 feature['geometry']['coordinates']])))
-            feature_wkt = make_valid(feature_wkt)
-            feature['coverage'] = aoi_polygon.intersection(feature_wkt).area / feature_wkt.area
-            feature['bbox_coverage'] = feature_wkt.intersection(aoi_polygon).area / aoi_polygon.area
+        try:
+            if feature['geometry']['type'] == 'Polygon':
+                feature_wkt = shapely.wkt.loads("POLYGON (({}))".format(
+                    ", ".join([" ".join([str(k) for k in i]) for i in feature['geometry']['coordinates'][0]])))
+                feature['coverage'] = aoi_polygon.intersection(feature_wkt).area / feature_wkt.area
+                feature['bbox_coverage'] = feature_wkt.intersection(aoi_polygon).area / aoi_polygon.area
+            else:
+                feature_wkt = shapely.wkt.loads("MULTIPOLYGON ({})".format(", ".join(
+                    ["(({}))".format(", ".join([" ".join([str(k) for k in i]) for i in l[0]])) for l in
+                     feature['geometry']['coordinates']])))
+                feature['coverage'] = aoi_polygon.intersection(feature_wkt).area / feature_wkt.area
+                feature['bbox_coverage'] = feature_wkt.intersection(aoi_polygon).area / aoi_polygon.area
+        except:
+            continue
     return coverage
 
 def _check_image_format(img_format):
@@ -262,25 +265,54 @@ def _check_typeName(typename):
         raise Exception('{} is not an acceptable TypeName. Please use one of the following {}'.format(typename, acceptable_types))
 
 
-def cql_checker(cql_filter):
+def cql_checker(cql_filter, endpoint='endpoint', token='token'):
     """
     Function checks for the validity of a passed in cql filter
     Args:
         cql_filter (string) = Representation of cql filter
     """
-    string_list = ["featureId", "groundSampleDistanceUnit", "source", "bandDescription", "dataLayer",
-                   "legacyDescription", "bandConfiguration", "fullResolutionInitiatedOrder", "legacyIdentifier",
-                   "crs" "processingLevel", "companyName", "orbitDirection", "beamMode", "polarisationMode",
-                   "polarisationChannel", "antennaLookDirection", "md5Hash", "licenseType", "ceCategory",
-                   "deletedReason", "productName", "bucketName", "path", "sensorType", "sensor", "vehicle_name",
-                   "product_name", "catid", "block_name", "uuid", "geohash_6", "cam", "change_type", "context",
-                   "subregion", "geocell", "product"]
-    string_date_list = ["acquisitionDate", "createdDate", "earliestAcquisitionTime", "latestAcquisitionTime",
-                        "lastModifiedDate", "deletedDate", "create_date", "acq_time_earliest", "acq_time_latest",
-                        "acq_time", "change_timestamp", "version_timestamp"]
-    float_list = ["groundSampleDistance", "resolutionX", "resolutionY", "niirs", "ce90Accuracy", "gsd", "accuracy"]
-    boolean_list = ["isEnvelopeGeometry", "isMultiPart", "hasCloudlessGeometry", "active"]
-    integer_list = ["usageProductId", "change_area_size_sqm"]
+
+    # get available filters from DescribeFeatureType
+    xsd = {'xsd': 'http://www.w3.org/2001/XMLSchema'}
+    valid_filters_dict = {}
+
+    base_url = 'https://api.maxar.com/'
+    if endpoint == 'streaming':
+        base_url += 'streaming/v1/ogc/ows'
+    elif endpoint == 'basemaps_seamlines':
+        base_url += 'basemaps/v1/seamlines/wfs'
+    elif endpoint == 'basemaps_ogc':
+        base_url += 'basemaps/v1/ogc/wfs'
+    elif endpoint == 'vector':
+        base_url += 'analytics/v1/vector/change-detection/Maxar/ows'
+
+    auth_header = {"Authorization": f"Bearer {token}"}
+    query_string = {'service': 'WFS', 'request': 'DescribeFeatureType', 'version': '2.0.0'}
+
+    response = requests.request("GET", base_url, headers=auth_header, params=query_string,
+                                verify=True)
+    _response_handler(response)
+    response = response.text
+
+    feature_type = ET.fromstring(response)
+    tag = []
+
+    if endpoint == 'streaming' or endpoint == 'basemaps_ogc':
+        tag = feature_type.find(".//xsd:complexType[@name='FinishedFeatureType']//xsd:sequence", xsd)
+        tag.append(feature_type.find(".//xsd:complexType[@name='RasterFeatureType']//xsd:sequence", xsd))
+    elif endpoint == 'basemaps_seamlines':
+        tag = feature_type.find(".//xsd:complexType[@name='seamlineType']//xsd:sequence", xsd)
+    elif endpoint == 'vector':
+        tag = feature_type.find(".//xsd:complexType[@name='layer_pcm_eo_1985Type']//xsd:sequence", xsd)
+
+    for element in tag.findall('xsd:element', xsd):
+        key = element.get('type').split(":")[1]
+        value = element.get('name')
+        if key in valid_filters_dict:
+            valid_filters_dict[key].append(value)
+        else:
+            valid_filters_dict[key] = [value]
+
     source_list = ["'WV01'", "'WV02'", "'WV03_VNIR'", "'WV03'", "'WV04'", "'GE01'", "'QB02'", "'KS3'", "'KS3A'",
                    "'WV03_SWIR'", "'KS5'", "'RS2'", "'IK02'", "'LG01'", "'LG02'"]
     _0_360_list = ["sunAzimuth", "sunElevation", "offNadirAngle", "minimumIncidenceAngle", "maximumIncidenceAngle",
@@ -308,43 +340,11 @@ def cql_checker(cql_filter):
         else:
             error_list.append('No comparison operator e.g. < > =')
             raise Exception('CQL Filter Error:', error_list)
-        if key == 'source':
+
+        # more stringent checks on certain filters
+        if key == 'source' or key == 'sensor':
             if value not in source_list:
                 error_list.append(f'{value} should be one of {source_list}')
-        elif key in float_list:
-            try:
-                float(value)
-            except:
-                error_list.append(f'{value} Not a float')
-        elif key in boolean_list:
-            value = value.replace("'", "")
-            if value != 'FALSE' and value != 'TRUE':
-                error_list.append(f'{value} should be either TRUE or FALSE')
-        elif key in integer_list:
-            try:
-                int(value)
-            except:
-                error_list.append(f'{value} Not an integer')
-        elif key in string_date_list:
-            if value[0] != "'" or value[-1] != "'":
-                error_list.append(f'{value} Need single quotes around dates')
-            value = value.replace("'", "")
-            try:
-                format_data = "%Y-%m-%d %H:%M:%S.%f"
-                datetime.strptime(value, format_data)
-
-            except:
-                try:
-                    format_data = "%Y-%m-%d"
-                    datetime.strptime(value, format_data)
-                except:
-                    error_list.append(f'{value} Not a valid date')
-
-        elif key in string_list:
-            if value[0] != "'" or value[-1] != "'":
-                error_list.append(f'{value} Need single quotes around string values')
-            if not isinstance(value, str):
-                error_list.append(f'{value} Not a valid string value')
         elif key in _0_1_list:
             try:
                 value = float(value)
@@ -359,10 +359,44 @@ def cql_checker(cql_filter):
                 error_list.append(f'{value} Not a float')
             if not (0 <= value <= 360):
                 error_list.append(f'{value} must be between 0 and 360')
+        if ('decimal' in valid_filters_dict.keys() and key in valid_filters_dict['decimal']) or \
+                ('double' in valid_filters_dict.keys() and key in valid_filters_dict['double']):
+            try:
+                float(value)
+            except:
+                error_list.append(f'{value} Not a float')
+        elif 'boolean' in valid_filters_dict.keys() and key in valid_filters_dict['boolean']:
+            value = value.replace("'", "")
+            if value != 'FALSE' and value != 'TRUE':
+                error_list.append(f'{value} should be either TRUE or FALSE')
+        elif 'int' in valid_filters_dict.keys() and key in valid_filters_dict['int']:
+            try:
+                int(value)
+            except:
+                error_list.append(f'{value} Not an integer')
+        elif ('dateTime' in valid_filters_dict.keys() and key in valid_filters_dict['dateTime']) or \
+            ('date' in valid_filters_dict.keys() and key in valid_filters_dict['date']):
+            if value[0] != "'" or value[-1] != "'":
+                error_list.append(f'{value} Need single quotes around dates')
+            value = value.replace("'", "")
+            try:
+                format_data = "%Y-%m-%d %H:%M:%S.%f"
+                datetime.strptime(value, format_data)
+            except:
+                try:
+                    format_data = "%Y-%m-%d"
+                    datetime.strptime(value, format_data)
+                except:
+                    error_list.append(f'{value} Not a valid date')
+        elif 'string' in valid_filters_dict.keys() and key in valid_filters_dict['string']:
+            if value[0] != "'" or value[-1] != "'":
+                error_list.append(f'{value} Need single quotes around string values')
+            if not isinstance(value, str):
+                error_list.append(f'{value} Not a valid string value')
         else:
             error_list.append(f'{key, value} Not a valid parameter')
     if len(error_list) > 0:
-        print('CQL Filter Error:' + ", ".join(error_list))
+        raise Exception('CQL Filter Error:' + ", ".join(error_list))
 
 
 

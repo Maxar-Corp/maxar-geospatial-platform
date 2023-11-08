@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
   name = 'MGP_SDK',
-  version = '1.2.3',
+  version = '1.3.0',
   license='MIT',
   description = 'SDK for interacting with Maxar Geospatial Platform',
   long_description=README,
@@ -19,7 +19,7 @@ setup(
         'Source': 'https://github.com/Maxar-Corp/maxar-geospatial-platform'
         },
   keywords = ['OGC', 'WMS', 'WFS', 'WMTS', 'WCS', 'MAXAR', 'IMAGERY', 'GIS'],
-  python_requires= '>=3.7',
+  python_requires= '>=3.8',
   install_requires=[
           'pyproj',
           'shapely',

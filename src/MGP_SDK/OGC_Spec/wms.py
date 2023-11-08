@@ -54,7 +54,7 @@ class WMS:
         else:
             raise Exception('Search function must have a BBOX.')
         if 'filter' in keys:
-            process.cql_checker(kwargs['filter'])
+            process.cql_checker(kwargs['filter'], endpoint=self.endpoint, token=self.token)
             querystring.update({'cql_filter': kwargs['filter']})
             del (kwargs['filter'])
         if 'request' in keys:

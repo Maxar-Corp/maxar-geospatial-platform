@@ -88,7 +88,7 @@ class WMTS:
         token = self.auth.refresh_token()
         authorization = {'Authorization': 'Bearer {}'.format(token)}
         if 'filter' in kwargs.keys():
-            process.cql_checker(kwargs['filter'])
+            process.cql_checker(kwargs['filter'], endpoint=self.endpoint, token=self.token)
         querystring = self.querystring
         querystring['TileMatrix'] = querystring['tileMatrixSet'] + ':' + str(zoom_level)
         querystring['TileRow'] = tilerow
@@ -115,7 +115,7 @@ class WMTS:
 
         process._validate_bbox(bbox, srsname=crs)
         if filter in kwargs.keys():
-            process.cql_checker(kwargs['filter'])
+            process.cql_checker(kwargs['filter'], endpoint=self.endpoint, token=self.token)
         bbox_list = [i for i in bbox.split(',')]
         miny = float(bbox_list[0])
         minx = float(bbox_list[1])
