@@ -2,6 +2,7 @@ import json
 import warnings
 import requests
 import os
+import urllib.parse
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 class Auth:
@@ -27,11 +28,11 @@ class Auth:
         self.api_base_url = "https://api.maxar.com"
         self.username = username
         if password:
-            self.password = bytes(password, 'utf-8').decode('unicode_escape')
+            self.password = urllib.parse.quote(bytes(password, 'utf-8').decode('unicode_escape'), safe='')
         self.client_id = client_id
         self.access = None
         self.refresh = None
-        self.version = "Python1.2.3"
+        self.version = "Python1.3.0"
         self.api_version = 'v1'
         self.SSL = True
 
@@ -67,7 +68,7 @@ class Auth:
             raise Exception('.MGP-config not formatted properly')
         else:
             user_name = cred_dict['user_name']
-            password = bytes(cred_dict['user_password'], 'utf-8').decode('unicode_escape')
+            password = urllib.parse.quote(bytes(cred_dict['user_password'], 'utf-8').decode('unicode_escape'), safe='')
             client_id = cred_dict['client_id']
             return user_name, password, client_id
 

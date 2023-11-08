@@ -6,46 +6,6 @@ class Interface:
         self.raster = RasterAnalytics(self.auth)
         self.vector = VectorAnalytics(self.auth)
 
-    def get_image_metadata_raster(self, function:str, script_id:str, **kwargs):
-        """
-        Get metadata about an image given an IPE resource ID, function name, and parameters.
-        Args:
-        :param function: String of The function to process. ex pansharp
-        :param script_id: String of Desired script ID
-
-        Kwargs:
-        :param function_parameters: String of The function parameters if required. *Note these are always prepended by
-            a `p=` query string param since they are dynamic based on the selected `function`*
-        :return: response json object containing the metadata about an image
-        """
-        if kwargs:
-            return self.raster.get_image_metadata(function,script_id, function_parameters=kwargs["function_parameters"])
-        else:
-            return self.raster.get_image_metadata(function,script_id)
-
-    def get_byte_range_raster(self,function:str, script_id:str, prefetch:bool = True, head_request:bool = False,
-                              **kwargs):
-        """
-        Returns a virtual image as GeoTIFF given a script ID, function name, function parameters
-        (provided as url query parameters), and a valid byte range.
-        Args:
-        :param function: String of The function to process. ex pansharp
-        :param script_id: String of Desired script ID
-        :param prefetch: Prefetching true or false. Default is true
-        :param head_request: Boolean of if you would like this to be a HEAD http request instead of a GET to return only
-         response headers
-
-        Kwargs:
-        :param function_parameters: String of The function parameters if required. *Note these are always prepended by
-            a `p=` query string param since they are dynamic based on the selected `function`*
-        :return:
-        """
-        if kwargs:
-            return self.raster.get_byte_range(function,script_id,prefetch,head_request,
-                                              function_parameters=kwargs["function_paramaters"])
-        else:
-            return self.raster.get_byte_range(function,script_id,prefetch,head_request)
-
     def raster_url(self, script_id, function, collect_id, api_token, crs='UTM', **kwargs):
         """
         Formats a vsicurl URL to be utilized with further raster functions
@@ -57,13 +17,29 @@ class Interface:
             crs (string) = Desired projection. Defaults to UTM
         Kwargs:
             bands (string) = Comma separated string of desired bands. Ex: red,green,blue
-            dra (string) = Binary of whether or not to apply dra to the raster. String of bool (true, false)
+            dra (string) = Binary of whether or not to apply dra to the raster. String of bool (true, false). Defaults
+            to false
             interpolation (string) = Desired resizing or (re)projection from one pixel grid to another
+            acomp (string) = Binary of whether or not to apply atmospheric compensation to the output after hd (if
+            applied) and before dra. String of bool (true, false). Defaults to false
+            hd (string) = Binary of whether or not to apply higher resolution to the output. String of bool (true,
+            false). Defaults to false
         Returns:
             URL formatted with desired parameters and /vsicurl/ prefix
         """
 
         return self.raster.create_raster_url(script_id, function, collect_id, api_token, crs, **kwargs)
+
+    def raster_metadata(self, raster_url):
+        """
+        Lists out various metadata information of a desired raster
+        Args:
+            raster_url: (string) = Vsicurl formatted URL of a raster object
+        Returns:
+             Dictionary of various raster metadata information
+        """
+
+        return self.raster.get_raster_metadata(raster_url)
 
     def get_arrays(self, raster_url, xoff, yoff, width, height):
         """

@@ -45,9 +45,9 @@ class Activations:
             url = self.base_url + '/account-service/api/v1/activations/number/{}'.format(activation_number)
         else:
             url = self.base_url + '/account-service/api/v1/activations'
-            params = {}
-            for key, value in kwargs.items():
-                params[key] = value
+        params = {}
+        for key, value in kwargs.items():
+            params[key] = value
         response = requests.request("GET", url, headers=authorization, params=params, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()

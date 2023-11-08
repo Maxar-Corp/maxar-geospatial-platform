@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 1.3.0 (Nov 7, 2023)
+* Added CQL check function
+* Added acomp and hd options for RasterAnalytics class
+* Updated wording of Jupyter notebooks 
+* Updated minimum supported version to 3.8
+
 ## Version 1.2.3 (Oct 12, 2023)
 * Added password parsing to allow special characters
 

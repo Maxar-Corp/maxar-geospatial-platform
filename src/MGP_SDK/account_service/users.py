@@ -103,7 +103,7 @@ class Users:
         payload = {"notifySuspension": False,
                    "userType": user_type,
                    "accountId": account_id,
-                   "activationId": activation_id,
+                   "activations": [{"id": activation_id}],
                    "emailAddress": email_address,
                    "firstName": first_name,
                    "lastName": last_name,

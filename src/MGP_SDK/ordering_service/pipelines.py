@@ -41,7 +41,7 @@ class Pipelines:
         process._response_handler(response)
         return response.json()
 
-    def post_order_or_get_estimate(self, namespace: str, name: str, settings: dict, output_config: dict, metadata: dict, endpoint: str, **kwargs):
+    def post_order_or_get_estimate(self, namespace: str, name: str, settings: dict, output_config: dict, metadata: dict, **kwargs):
         """
         Place an order or validate an order request before placing it
         Args:
@@ -62,12 +62,12 @@ class Pipelines:
 
         kwarg_list = ['notifications', 'metadata']
         data = {**{k: v for k, v in kwargs.items() if k in kwarg_list}, **settings, **output_config, **metadata}
-        if endpoint == 'order':
-            if 'validate' in kwargs.keys() and kwargs['validate']:
+        if 'validate' in kwargs.keys():
+            if kwargs['validate']:
                 endpoint = 'validate'
             else:
                 endpoint = 'order'
-        elif endpoint == 'estimate':
+        else:
             endpoint = 'estimate'
         url = f"{self.base_url}/{namespace}/{name}/{endpoint}"
         response = requests.post(url, data=json.dumps(data), headers=self.authorization, verify=self.auth.SSL)

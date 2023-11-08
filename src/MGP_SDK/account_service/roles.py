@@ -10,7 +10,7 @@ class Roles:
         self.version = auth.version
         self.auth = auth
 
-    def get_roles(self):
+    def get_roles(self, **kwargs):
         """
         Function lists all roles
         Returns:
@@ -19,7 +19,10 @@ class Roles:
 
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/roles"
-        response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
+        params = {}
+        for key, value in kwargs.items():
+            params[key] = value
+        response = requests.request("GET", url, headers=authorization, params=params, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
 

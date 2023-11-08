@@ -12,44 +12,13 @@ analytics = Interface(auth)
 
 ### Package methods:
 
-- [Get Image Metadata Raster](#get-image-metadata-raster--get_image_metadata_raster)
-- [Get Byte Range Raster](#get-byte-range-raster--get_byte_range_raster)
 - [Create Raster URL](#raster-url--raster_url)
+- [Raster Metadata] (#raster-metadata--raster_metadata)
 - [Get Raster Arrays](#get-arrays--get_arrays)
 - [Download Raster](#download-raster--download_raster)
 - [Search Vector Layer](#search-vector-layer--search_vector_layer)
 - [Download Vector Analytics](#download-vector-analytics--download_vector_analytics)
 - [Download Vector Tiles](#download-vector-tiles--download_vector_tiles)
-
-### Get Image Metadata Raster / get_image_metadata_raster()
-Function gets metadata about an image given an IPE resource ID, function name, and parameters<br>
-**Returns**: Response JSON object containing the metadata about an image.<br>
-Args:<br>
-**function**: (string) The function to process (e.g. "pansharp")<br>
-**script_id**: (string) Desired script ID<br>
-Keyword Arguments:<br>
-**function_parameters**: (string) The function parameters if required<br>
-
-```python
-response = analytics.get_image_metadata_raster(function="pansharp", script_id="your_script_id")
-print(response)
-```
-
-### Get Byte Range Raster / get_byte_range_raster()
-Function returns a virtual image as GeoTIFF given a script ID, function name, function parameters, and a valid byte range.<br>
-**Returns**: Response JSON object containing the byte range information.<br>
-Args:<br>
-**function**: (string) The function to process (e.g. "pansharp")<br>
-**script_id**: (string) Desired script ID<br>
-**prefetch**: (bool) Default=True, Prefetching true or false<br>
-**head_request**: (bool) Default=False, Boolean indicating if it should be a HEAD HTTP request instead of a GET to return only response headers<br>
-Keyword Arguments:<br>
-**function_parameters**: (string) The function parameters if required<br>
-
-```python
-response = analytics.get_byte_range_raster(function="pansharp", script_id="your_script_id")
-print(response)
-```
 
 ### Create Raster URL / raster_url()
 Formats a vsicurl URL to be utilized with further raster functions<br>
@@ -62,11 +31,24 @@ Args:<br>
 **crs**: (string) Default="UTM". Desired projection<br>
 Keyword Arguments:<br>
 **bands**: (string) Comma separated string of desired bands (e.g. "red,green.blue")<br>
-**dra**: (string) Binary of whether or not to apply dra to the raster. String of bool ("true", "false")<br>
+**dra**: (string) Binary of whether or not to apply dra to the raster. String of bool ("true", "false"). Defaults to false<br>
 **interpolation**: (string) Desired resizing or (re)projection from one pixel grid to another<br>
+**acomp**: (string) Binary of whether or not to apply atmospheric compensation to the output after hd (if applied) and before dra. String of bool ("true", "false"). Defaults to false<br>
+**hd**: (string) Binary of whether or not to apply higher resolution to the output. String of bool ("true", "false"). Defaults to false<br>
 
 ```python
 response = analytics.raster_url(script_id="ortho-image", function="ortho", collect_id="<collectID>", api_token="<yourAPIToken>", bands="red,green,blue", dra="true")
+print(response)
+```
+
+### Raster Metadata / raster_metadata()
+Lists out various metadata information of a desired raster<br>
+**Returns**: Dictionary of various raster metadata information<br>
+Args:<br>
+**raster_url**: (string) Vsicurl formatted URL of a raster object<br>
+
+```python
+response = analytics.raster_metadata(raster_url="<vsicurl-formatted-URL>")
 print(response)
 ```
 

@@ -14,6 +14,8 @@ Options:
 	
 	--dra, -d, Binary of whether or not to apply dra to the raster. String of bool (true, false). Defaults to None
 	--interpolation, -i, Desired resizing or (re)projection from one pixel grid to another. Defaults to None
+	--acomp, -ac, Binary of whether or not to apply atmospheric compensation to the output after hd (if applied) and before dra. String of bool (true, false). Defaults to None
+	--hd, -h, Binary of whether or not to apply higher resolution to the output. String of bool (true, false). Defaults to None
 Return a vsicurl formatted raster URL
 
 - In the terminal, enter `mgp raster-url` and pass the required flags
@@ -21,6 +23,17 @@ Return a vsicurl formatted raster URL
 Example:
 
 	mgp raster-url -s "ortho-image" -f "pansharp-ortho" -cid <collectID> -a <apiToken> -b "red,green,blue"
+	
+### Get Raster Metadata
+Options:
+	--raster_url, -r, vsicurl formatted URL of a raster object. Required
+Obtain metadata information for a rasterized object
+
+- In the terminal, enter `mgp get-raster-metadata` and pass the required flags
+
+Example:
+
+	mgp get-raster-metadata -r "<raster URL from raster-url function>"
 
 ### Get Raster Array
 Options:
