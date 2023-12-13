@@ -15,7 +15,7 @@ There are two options recommended for environment set up to utilize the **MGP SD
 	* First install the [Microsoft C++ Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 	* Create a conda environment with the `gdal`, `rasterio`, and `shapely` packages:
 		
-		Example: ``conda create -n <environment_name> python=3.7 gdal rasterio shapely``
+		Example: ``conda create -n <environment_name> python=3.8 gdal rasterio shapely``
 		
 	* Proceed with standard pip installation below
 		

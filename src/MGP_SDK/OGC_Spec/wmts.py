@@ -84,9 +84,8 @@ class WMTS:
         Returns:
             WMTS tiles for the input data
         """
-
-        token = self.auth.refresh_token()
-        authorization = {'Authorization': 'Bearer {}'.format(token)}
+        process.access_token_refresh(self.auth)
+        authorization = {'Authorization': 'Bearer {}'.format(self.token)}
         if 'filter' in kwargs.keys():
             process.cql_checker(kwargs['filter'], endpoint=self.endpoint, token=self.token)
         querystring = self.querystring
@@ -169,3 +168,4 @@ class WMTS:
                        'SDKversion': '{}'.format(self.version)
                        }
         return querystring
+    

@@ -29,6 +29,7 @@ class Search:
         Returns:
             GeoJSON feature collection
         """
+        process.access_token_refresh(self.auth)
 
         if 'bbox' in kwargs.keys() and 'intersects' in kwargs.keys():
             if kwargs['bbox'] != None and kwargs['intersects'] != None:
@@ -71,3 +72,4 @@ class Search:
         #         else:
         #             is_next = False
         return response
+    

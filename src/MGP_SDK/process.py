@@ -26,6 +26,16 @@ def authorization(auth_class=None):
         token = auth_class.refresh_token()
         auth_dict = {'Authorization': 'Bearer {}'.format(token), 'content-type': 'application/json'}
     return auth_dict
+def access_token_refresh(auth_class):
+    """
+    function takes in the current auth object and gets a new access token if the old object's access token is expired.
+    :param auth_class:
+    :return: the auth class with a new access token
+    """
+    if datetime.now() >= auth_class.token_expires:
+        auth_class.access = auth_class.refresh_token()
+
+
 
 def _response_handler(response):
     """
@@ -34,21 +44,8 @@ def _response_handler(response):
         Requests response object of server status
     """
 
-    if response.status_code == 200 or response.status_code == 201 or response.status_code == 204 or \
-            response.status_code == 202:
+    if not response.raise_for_status():
         return response
-    elif 'Exception' in response.text:
-        raise Exception(response.url, response.text)
-    else:
-        raise Exception(
-            "Non-200 response {} received for {} \n{}".format(response.status_code, response.url, response.text)
-        )
-    # if response.status_code != 200:
-    #     raise Exception("Non-200 response received for {}.".format(response.url))
-    # elif 'Exception' in response.text:
-    #     raise Exception(response.url, response.text)
-    # else:
-    #     return response
 
 
 def area_sqkm(bbox, srsname="EPSG:4326"):

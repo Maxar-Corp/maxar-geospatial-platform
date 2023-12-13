@@ -18,7 +18,7 @@ class TableInfo:
         Returns:
              Dictionary of all tables and their details or a single table and its details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         if table_id:
             url = self.base_url + '/account-service/api/v1/ratetables/{}'.format(table_id)
@@ -36,7 +36,7 @@ class TableInfo:
         Returns:
             Dictionary of a list of all activations associated with the given rate table
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/ratetables/{}/activations'.format(table_id)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -49,7 +49,7 @@ class TableInfo:
         Returns:
             List of dictionaries of available credit types
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/ratetables/credittypes'
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -64,7 +64,7 @@ class TableInfo:
         Returns:
             List of all rate amounts and their details for the specified rate table
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/ratetables/{}/productCredits'.format(table_id)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -77,9 +77,10 @@ class TableInfo:
         Returns:
             List of dictionaries of rate tables and their associated products
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/ratetables/activationNumbers'
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

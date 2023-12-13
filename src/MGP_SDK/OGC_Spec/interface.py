@@ -603,7 +603,7 @@ class OgcInterface:
             filename = 'Maxar_Image'
 
         # This code takes the output directory and makes a new directory inside of it to put all the images. This is because create_mosaic will break if the folder has other files in it.
-        outputdirectory = outputdirectory + r'\{}'.format(filename)
+        outputdirectory = os.path.join(outputdirectory, r'{}'.format(filename))
         if not os.path.exists(outputdirectory):
             os.makedirs(outputdirectory)
         else:
@@ -751,15 +751,15 @@ class OgcInterface:
                 mosaic.save(filepath)
                 print("Finished image mosaic process, output directory is: {}".format(kwargs['outputdirectory']))
             else:
-                filepath = r"{}\merged_image.{}".format(kwargs['outputdirectory'], img_format)
+                filepath = os.path.join(kwargs['outputdirectory'],"merged_image.{}".format(img_format))
                 mosaic.save(filepath)
                 print("Finished image mosaic process, output directory is: {}".format(kwargs['outputdirectory']))
         else:
             if 'filename' in kwargs.keys():
-                filepath = r"{}\{}.{}".format(base_dir, kwargs['filename'], img_format)
+                filepath = os.path.join(base_dir, kwargs['filename'], img_format)
                 mosaic.save(filepath)
             else:
-                filepath = r"{}\merged_image.{}".format(base_dir, img_format)
+                filepath = os.path.join(base_dir, "merged_image.{}".format(img_format))
                 mosaic.save(filepath)
             print("Finished image mosaic process, output directory is: {}".format(base_dir))
 

@@ -1,4 +1,4 @@
-# Streaming CLI
+# Imagery CLI
 
 ### Search available imagery
 Options:
@@ -17,7 +17,7 @@ Searches an AOI using the WFS method and returns a list of features and their me
 Example:
 
 	mgp search -b "39.911942,-105.006058,39.913793,-104.996789" -d
-For further information on search functionality, see [Search](../ogc/image_search.md)
+For further information on search functionality, see [Search](../streaming/Streaming.md)
 
 ### Download available imagery
 Options:
@@ -44,11 +44,9 @@ Example:
 	- bbox, zoom_level, img_format
 	- bbox, height, width, img_format
 
-For further information on download functionality, see one of the following:
+For further information on download functionality, see the following:
 
-- [Download](../ogc/download_image.md)
-- [Download by Pixel Count](../ogc/download_image_pixel_count.md)
-- [Download Tiles](../ogc/download_tiles.md)
+- [Download](../streaming/Streaming.md)
 
 ### Get tile list for bounding box
 Options:

@@ -32,7 +32,7 @@ class Usage:
         Returns:
             Dictionary of account(s) usage
         """
-
+        process.access_token_refresh(self.auth)
         if 'page' in kwargs.keys():
             try:
                 int(kwargs['page'])
@@ -89,7 +89,7 @@ class Usage:
         Returns:
             Dictionary of activation(s) usage
         """
-
+        process.access_token_refresh(self.auth)
         if 'page' in kwargs.keys():
             try:
                 int(kwargs['page'])
@@ -148,7 +148,7 @@ class Usage:
             Dictionary of user(s) usage
         :return:
         """
-
+        process.access_token_refresh(self.auth)
         if 'page' in kwargs.keys():
             try:
                 int(kwargs['page'])
@@ -179,3 +179,4 @@ class Usage:
         response = requests.get(url, params=params, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

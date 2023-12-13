@@ -162,7 +162,7 @@ class Interface:
 
         return self.ogc.get_image_from_csv(featureid, img_size, **kwargs)
 
-    def get_full_res_image(self, featureid: str, thread_number: int = 100, bbox: str = None, mosaic: bool = False,
+    def get_full_res_image(self, featureid: str, thread_number: int = 25, bbox: str = None, mosaic: bool = False,
                            srsname: str = 'EPSG:4326', **kwargs):
         """
         Function takes in a feature id and breaks the image up into 1024x1024 tiles, then places a number of calls

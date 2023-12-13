@@ -32,7 +32,7 @@ class Monitoring:
         Returns:
             JSON response
         """
-
+        process.access_token_refresh(self.auth)
         parameter_list = ['start_datetime', 'end_datetime', 'description', 'aoi_geojson', 'match_criteria',
                           'monitor_notifications', 'order_templates']
         if 'start_date' in kwargs.keys():
@@ -63,7 +63,7 @@ class Monitoring:
         Returns:
             Dictionary of the desired monitor's configuration
         """
-
+        process.access_token_refresh(self.auth)
         url = self.base_url + '/' + monitor_id
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -78,7 +78,7 @@ class Monitoring:
         Returns:
             Dictionary of the desired monitor's status
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/{monitor_id}/{status}'
         response = requests.post(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -99,7 +99,7 @@ class Monitoring:
             ValueError: if limit is not an int and greater than 0.
             Exception: If filter and sort are not formatted properly.
         """
-
+        process.access_token_refresh(self.auth)
         if 'limit' in kwargs.keys():
             try:
                 int(kwargs['limit'])
@@ -139,7 +139,7 @@ class Monitoring:
         Throws:
             Exception: If filter and sort are not formatted properly.
         """
-
+        process.access_token_refresh(self.auth)
         if 'filter' in kwargs.keys():
             for filter in kwargs['filter']:
                 try:
@@ -161,3 +161,4 @@ class Monitoring:
         # TODO Handle pagination from response
         process._response_handler(response)
         return response.json()
+    

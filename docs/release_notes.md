@@ -1,5 +1,10 @@
 # Release Notes
 
+## Version 1.3.1 (Dec 13, 2023)
+* Updated various functions to better handle auth and refresh tokens
+* Updated response handler to return better status messaging
+* Updated documentation
+
 ## Version 1.3.0 (Nov 7, 2023)
 * Added CQL check function
 * Added acomp and hd options for RasterAnalytics class

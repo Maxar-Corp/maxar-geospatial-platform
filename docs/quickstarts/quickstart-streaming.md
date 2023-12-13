@@ -2,21 +2,21 @@
 
 ## Initializing
 
-After setting up the config file from the [Getting Started](../index.md) section, run the following code to create an instance of the Interface Class. This instance will be used to access functionality of the OGC-SDK.
+After setting up the config file from the [Getting Started](../index.md) section, run the following code to create an instance of the Interface Class. This instance will be used to access functionality of the MGP-SDK.
 
-	from MPS_Portal_SDK import Interface
+	from MGP_SDK.interface import Interface
 	interface = Interface()
 	
 In the following example, we will search for an AOI within the feature id `932f7992a4d86a9ca412c024c22792ce`. Our AOI will be the bbox `39.906477,-105.010843,39.918031,-104.991939`. The results will be returned as a json object which we will then print.
 
 
-	from MPS_Portal_SDK import Interface
+	from MGP_SDK.interface import Interface
 	interface = Interface()
 	
 	feature_id = '932f7992a4d86a9ca412c024c22792ce'
 	aoi = '39.906477,-105.010843,39.918031,-104.991939'
 	
-	results = interface.search(filter="featureId='{}'".format(feature_id), bbox=aoi)
+	results = interface.streaming.search(filter="featureId='{}'".format(feature_id), bbox=aoi)
 	
 	print(results)
 	
@@ -90,23 +90,23 @@ The results will be a list of dictionaries. This list of dictionaries will also 
 	  'coverage': 0.0010546500824560633}
 	]
 		
-For more details, see [Search](../ogc/image_search.md)
+For more details, see [Search](../streaming/Streaming.md)
 	
 To download the image to the default location ``C:\Users\<user>\download.jpeg`` or `~\download.jpeg`, we will use the following code. This will download the imagery from the feature ID within the aoi and return the location of the downloaded image.
 
-	from MPS_Portal_SDK import Interface
+	from MGP_SDK.interface import Interface
 	interface = Interface()
 
 	feature_id = '932f7992a4d86a9ca412c024c22792ce'
 	aoi = '39.906477,-105.010843,39.918031,-104.991939'
 	cql_filter = "featureId='{}'".format(feature_id)
 
-	download = interface.download_image_by_pixel_count(bbox=aoi, height=512, width=512, img_format='jpeg', filter=cql_filter)
+	download = interface.streaming.download_image_by_pixel_count(bbox=aoi, height=512, width=512, img_format='jpeg', filter=cql_filter)
 	print(download)
 	
 The result should be a jpeg as shown below.
 
 ![satellite_image](../images/sample_image.jpeg)
 
-For more details, see [Download Image by Pixel Count](../ogc/download_image_pixel_count.md)
+For more details, see [Download Image by Pixel Count](../streaming/Streaming.md)
 	

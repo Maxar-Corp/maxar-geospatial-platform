@@ -18,7 +18,7 @@ class Usage:
         Returns:
             Message stating if usage is allowed or not
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/allowed'
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         if response.status_code == 200:
@@ -34,8 +34,9 @@ class Usage:
         Returns:
             Dictionary of available products and their usage
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/activation/overview'
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

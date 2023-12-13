@@ -7,6 +7,8 @@ single geospatial feature is represented in the Maxar catalog by a GeoJSON featu
 
 All of the data served and managed by the Maxar Discovery API follow the STAC specification and implements a STAC API.
 
+___
+
 ### Getting Started
 ```python
 from MGP_SDK.interface import Interface
@@ -16,36 +18,42 @@ discovery = Interface().discovery_service
 
 ### Package methods
 
-- [Stac Search](#stac-search--stac_search)
-- [Audit Search](#audit-search--search_by_audit_fields)
-- [Get Root Catalog](#get-root-catalog--get_root_catalog)
-- [Get All Collections](#get-all-collections--get_call_collections)
-- [Get Collection Definition](#get-collection-definition--get_collection_definition)
-- [Get STAC Item](#get-stac-item--get_stac_item)
-- [Get Top Level Sub Catalog](#get-top-level-sub-catalog--get_top_level_sub_catalog)
-- [Get A Sub Catalog](#get-a-sub-catalog--get_sub_catalog)
-- [Get All Sub Catalog Collections](#get-all-sub-catalog-collections--get_all_sub_catalog_collections)
-- [Get A Sub Catalog Collection Definition](#get-a-sub-catalog-collection-definition--get_sub_catalog_collection_definition)
-- [Get Specifications](#get-specifications--get_specifications)
-- [Get Healthcheck](#get-healthcheck--get_healthcheck)
-- [Get Status](#get-status--get_status)
+- [Stac Search](#stac-search)
+- [Audit Search](#audit-search)
+- [Get Root Catalog](#get-root-catalog)
+- [Get All Collections](#get-all-collections)
+- [Get Collection Definition](#get-collection-definition)
+- [Get STAC Item](#get-stac-item)
+- [Get Top Level Sub Catalog](#get-top-level-sub-catalog)
+- [Get A Sub Catalog](#get-a-sub-catalog)
+- [Get All Sub Catalog Collections](#get-all-sub-catalog-collections)
+- [Get A Sub Catalog Collection Definition](#get-a-sub-catalog-collection-definition)
+- [Get Specifications](#get-specifications)
+- [Get Healthcheck](#get-healthcheck)
+- [Get Status](#get-status)
 
 ## Discovery
 
-### STAC Search / stac_search()
+### STAC Search 
+**stac_search()**
+
 STAC search searches through the Maxar catalog and returns a Feature Collection of STAC items based on the filters 
 provided<br>
-Keyword Arguments:<br>
-**collections**: str, Comma-separated list of collections to search in. Use str format not a Python list<br>
-**sub_catalog_id**: str, name of the subCatalogId to search in<br>
-**sub_catalog_collection**: str, used to denote collections inside of sub catalogs<br>
-**bbox**: str, Bounding box in format "west,south,east,north" in WGS84 decimal degrees<br>
-**datetime**: str, Date range filter in ISO 8601 format "start-date/end-date" or exact datetime<br>
-**stac_id**: str, Comma-separated list of STAC item IDs to return. Use str format not a Python list<br>
-**intersects**: str, GeoJSON geometry to search by<br>
-**where**: str, SQL-style WHERE clause for filtering STAC items by properties<br>
-**orderby**: SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id'<br>
-**limit**: int, Maximum number of items to return<br>
+
+**Returns:** Dictionary of a JSON object containing information about a Feature Collection 
+
+**Kwargs:<br>**
+
+* collections: (*str*) Comma-separated list of collections to search in. Use str format not a Python list<br>
+* sub_catalog_id: (*str*) Name of the subCatalogId to search in<br>
+* sub_catalog_collection: (*str*) Used to denote collections inside of sub catalogs<br>
+* bbox: (*str*) Bounding box in format "west,south,east,north" in WGS84 decimal degrees<br>
+* datetime: (*str*) Date range filter in ISO 8601 format "start-date/end-date" or exact datetime<br>
+* stac_id: (*str*) Comma-separated list of STAC item IDs to return. Use str format not a Python list<br>
+* intersects: (*str*) GeoJSON geometry to search by<br>
+* where: (*str*) SQL-style WHERE clause for filtering STAC items by properties<br>
+* orderby: (*str*) SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id'<br>
+* limit: (*int*) Maximum number of items to return<br>
 
 ```python
 from MGP_SDK.interface import Interface
@@ -187,14 +195,21 @@ stac = discovery.stac_search(stac_id='0d1e2b78-aeb0-493e-b046-561265c6735b-inv, 
 ```
 </details>
 
-### Audit Search / search_by_audit_fields()
+### Audit Search 
+**search_by_audit_fields()**
+
 Retrieve items for a given collectionId by audit fields. Only update date or insert date may be provided, not both<br>
-Keyword Arguments:<br>
-**collection_id**: str, name of the collection to search e.g. wv01<br>
-**audit_insert_date**: str, Date range filter in ISO 8601 format "start-date/end-date" or exact datetime<br>
-**audit_update_date**: str, Date range filter in ISO 8601 format "start-date/end-date" or exact datetime<br>
-**limit**: int, Maximum number of items to return<br>
-Returns: List of STAC IDs matching the provided filters <br>
+
+**Returns:** List of STAC IDs matching the provided filters <br>
+
+**Kwargs:<br>**
+
+* collection_id: (*str*) Name of the collection to search e.g. wv01<br>
+* audit_insert_date: (*str*) Date range filter in ISO 8601 format "start-date/end-date" or exact datetime<br>
+* audit_update_date: (*str*) Date range filter in ISO 8601 format "start-date/end-date" or exact datetime<br>
+* limit: (*int*) Maximum number of items to return<br>
+
+
 ```python
 stac_results = discovery.stac_search(collection_id='wv04', audit_insert_date='2023-03-12T00:00:00Z/2023-03-15T12:31:12Z')
 
@@ -202,99 +217,163 @@ stac_results_2 = discovery.stac_search(collection_id='ge01', audit_update_date='
                                        limit=15)
 ```
 
-### Get Root Catalog / get_root_catalog()
+### Get Root Catalog 
+
+**get_root_catalog()**
+
 Returns the root STAC Catalog or STAC Collection that is the entry point for users to browse<br>
+
+**Returns:** JSON of information on root STAC Catalog or STAC Collection
+
+
 ```python
 root = discovery.get_root_catalog()
 ```
 
-### Get All Collections / get_call_collections()
+### Get All Collections 
+
+**get_call_collections()**
+
 Return definitions for all collections<br>
-Keyword Arguments:<br>
-**orderby**: str, SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default 'datetime DESC, id ASC'<br>
-**limit**: int, Maximum number of items to return<br>
-Returns: JSON response
+
+**Returns:** JSON of information on all collections
+
+**Kwargs:<br>**
+
+* orderby: (*str*) SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default 'datetime DESC, id ASC'<br>
+* limit: (*int*) Maximum number of items to return<br>
+
+
 ```python
 collections = discovery.get_all_collections(limit=7, orderby='id')
 ```
 
-### Get STAC Item / get_stac_item()
+### Get STAC Item 
+**get_stac_item()**
+
 Return a STAC item's information<br>
-Arguments<br>
-**collection_id**: str, name of the collection to search e.g. wv01<br>
-**item_id:** str, identifier of the desired item<br>
-Returns: Dictionary of desired STAC item<br>
+
+**Returns:** Dictionary of information on desired STAC item
+
+**Args:<br>**
+
+* collection_id: (*str*) Name of the collection to search e.g. wv01<br>
+* item_id: (*str*) Identifier of the desired item<br>
+
 ```python
 stac = discovery.get_stac_item(collection_id='wv01', item_id='123456789abcdefg')
 ```
 
-### Get Collection Definition / get_collection_definition()
+### Get Collection Definition 
+**get_collection_definition()**
+
 Return a collection definition by collection ID
-Arguments:<br>
-**collection_id**: str, name of the collection to search e.g. wv01<br>
-Returns: JSON response
+
+**Returns:** JSON of information about a collection
+
+**Args:<br>**
+
+* collection_id: (*str*) Name of the collection to search e.g. wv01<br>
+
 ```python
 collection = discovery.get_collection_definition('wv01')
 ```
 
-### Get Top Level Sub Catalog / get_top_level_sub_catalog()
+### Get Top Level Sub Catalog 
+
+**get_top_level_sub_catalog()**
+
 View the available Maxar Sub-Catalogs that can be navigated as a self-contained STAC catalog<br>
-Keyword Arguments:<br>
-**orderby**: str, SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default 'datetime DESC, id ASC'<br>
-**limit**: int, Maximum number of items to return<br>
-Returns: JSON response
+
+**Returns:** JSON object of Sub-Catalogs
+
+**Kwargs:<br>**
+
+* orderby: (*str*) SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default 'datetime DESC, id ASC'<br>
+* limit: (*int*) Maximum number of items to return<br>
+
 ```python
 collections = discovery.get_top_level_sub_catalog(limit=5)
 ```
 
-### Get a Sub Catalog / get_sub_catalog()
+### Get a Sub Catalog 
+**get_sub_catalog()**
+
 View the definition of a Maxar Sub-Catalog<br>
-Arguments:<br>
-**sub_catalog_id**: str, ID of the sub catalog to view<br>
-Returns: JSON response
+
+Returns: JSON object of information about a Sub-Catalog
+
+**Args:<br>**
+
+* sub_catalog_id: (*str*) ID of the sub catalog to view<br>
+
 ```python
 sub_catalog = discovery.get_sub_catalog('dg-archive')
 ```
 
-### Get All Sub Catalog Collections / get_all_sub_catalog_collections()
+### Get All Sub Catalog Collections 
+**get_all_sub_catalog_collections()**
+
 List the collections that belong to a Sub-Catalog<br>
-Keyword Arguments:
-**sub_catalog_id**: str, ID of the sub catalog to view<br>
-**orderby**: SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default 'datetime DESC, id ASC'<br>
-**limit**: int, Maximum number of items to return<br>
-Returns: JSON response<br>
+
+**Returns:** JSON object of collections within a Sub-Catalog
+
+**Kwargs:**
+
+* sub_catalog_id: (*str*) ID of the sub catalog to view<br>
+* orderby: (*str*) SQL-style ORDER BY clause. Only for id and datetime e.g. 'orderby=id ASC' default 'datetime DESC, id ASC'<br>
+* limit: (*int*) Maximum number of items to return<br>
+
 ```python
 sub_collections = discovery.get_all_sub_catalog_collections(sub_catalog_id='dg-archive', orderby='datetime asc')
 ```
 
-### Get a Sub Catalog Collection Definition / get_sub_catalog_collection_definition()
+### Get a Sub Catalog Collection Definition 
+**get_sub_catalog_collection_definition()**
+
 View the definition of a collection that belongs to a Sub-Catalog<br>
-Keyword Arguments:<br>
-**sub_catalog_id**: str, ID of the sub catalog to view<br>
-**sub_catalog_collection_id**: str, ID of the sub catalog collection to view<br>
-Returns: JSON response
+
+**Returns:** JSON object of a collection definition
+
+**Kwargs:<br>**
+
+* sub_catalog_id: (*str*) ID of the sub catalog to view<br>
+* sub_catalog_collection_id: (*str*) ID of the sub catalog collection to view<br>
+
 ```python
 sub_catalog = discovery.get_sub_catalog_collection_definition(sub_catalog_id='dg-archive', 
                                                               sub_catalog_collection_id='wv04')
 ```
 
-### Get Specifications / get_specifications()
+### Get Specifications 
+**get_specifications()**
+
 Returns information about specifications that this API conforms to<br>
-Returns: JSON response
+
+**Returns:** JSON object of specifications
+
 ```python
 spec = discovery.get_specifications()
 ```
 
-### Get Healthcheck / get_healthcheck()
+### Get Healthcheck 
+**get_healthcheck()**
+
 Return the service's health and the health of each of its dependent services<br>
-Returns: JSON response
+
+**Returns:** JSON object of health status
+
 ```python
 spec = discovery.get_healthcheck()
 ```
 
-### Get Status / get_status()
+### Get Status 
+**get_status()**
+
 Return the service's status<br>
-Returns: JSON response
+
+**Returns:** JSON response of status
+
 ```python
 spec = discovery.get_status()
 ```

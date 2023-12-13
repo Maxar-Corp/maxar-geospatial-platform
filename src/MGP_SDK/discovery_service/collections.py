@@ -29,7 +29,7 @@ class Collections:
         Returns:
             Dictionary of STAC item and its information
         """
-
+        process.access_token_refresh(self.auth)
         if 'bbox' and 'intersects' in kwargs.keys():
             raise Exception('When performing a spatial search specify either "bbox" or "intersects" not both.')
         if 'datetime' in kwargs.keys():
@@ -78,7 +78,7 @@ class Collections:
         Returns:
             Dictionary of a STAC item and its information
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/{collection_id}/items/{item_id}'
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -97,7 +97,7 @@ class Collections:
         Returns:
             List of items for given collection ID
         """
-
+        process.access_token_refresh(self.auth)
         if not ((audit_insert_date is None) ^ (audit_update_date is None)):
             raise Exception('Must provide one of audit_insert_date or audit_update_date')
         else:
@@ -132,6 +132,7 @@ class Collections:
         Returns:
             Collection definition of a desired collection
         """
+        process.access_token_refresh(self.auth)
         # endpoint for both host/collections and host/collections:collectionId
         url = self.base_url
         params = {}
@@ -166,3 +167,4 @@ class Collections:
         #             is_next = False
 
         return response
+    

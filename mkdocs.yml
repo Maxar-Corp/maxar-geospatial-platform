@@ -10,48 +10,18 @@ nav:
         - Ordering: 'quickstarts/quickstart-ordering.md'
         - Monitoring: 'quickstarts/quickstart-monitoring.md'
     - Admin:
-        - Search: 'account-service/accounts/Search.md'
-        - Accounts:
-    #            - 'account-service/accounts/Accounts.md'
-            - 'account-service/accounts/Comments.md'
-            - 'account-service/accounts/Roles.md'
-            - 'account-service/activations/Activations.md'
-            - 'account-service/usage/Usage.md'
-    #        - Products:
-    #            - 'account-service/products/Products.md'
-    #            - Rate Tables: 'account-service/rate_tables/Rate_Tables.md'
-        - Users:
-                - 'account-service/users/Roles.md'
-                - 'account-service/users/Users.md'
-        - Tokens:
-              - 'token-service/tokens.md'
-        - Roles:
-            - 'account-service/roles/Roles.md'
+        - Accounts: 'account-service/account.md'
+        - Users: 'account-service/users.md'
+        - Usage: 'account-service/usage.md'
+        - API Keys: 'token-service/tokens.md'
     - Streaming:
-        - Search: 'ogc/image_search.md'
-        - Download:
-            - 'ogc/download_image.md'
-            - 'ogc/download_browse_image.md'
-            - 'ogc/download_image_featureid.md'
-            - 'ogc/download_image_pixel_count.md'
-            - 'ogc/download_tiles.md'
-            - 'ogc/get_full_res_image.md'
-        - 'Other':
-#            - 'ogc/band_manipulation.md'
-            - 'ogc/create_mosaic.md'
-            - 'ogc/get_filter_parameters.md'       
-    - Analytics:
-        - 'analytics-service/Analytics-service.md'
-    - Basemap:
+        - 'streaming/Streaming.md'
         - 'basemap-service/Basemap.md'
-    - Discovery: 
-        - 'discovery-service/Discovery.md'
-    - Monitoring:
-        - 'monitor-service/Monitor.md'
-    - Ordering:
-        - 'ordering-service/Ordering.md'
-    - Tasking:
-        - 'tasking-service/Tasking.md'
+    - Analytics: 'analytics-service/Analytics-service.md'
+    - Discovery: 'discovery-service/Discovery.md'
+    - Monitoring: 'monitor-service/Monitor.md'
+    - Ordering: 'ordering-service/Ordering.md'
+    - Tasking: 'tasking-service/Tasking.md'
     - CLI Commands:
         - 'CLI Commands/cli_commands.md'
         - 'CLI Commands/account_service_cli.md'
@@ -64,16 +34,7 @@ nav:
         - 'CLI Commands/tasking_service_cli.md'
         - 'CLI Commands/token_service_cli.md'
         - 'CLI Commands/usage_service_cli.md'
-        
-#    - Maxar QGIS Plugin:
-#        - Maxar Portal Connect: 'MaxarPortalConnect/index.md'
-#        - Log In: 'MaxarPortalConnect/Log_In.md'
-#        - Streaming: 'MaxarPortalConnect/streaming.md'
-#        - Download: 'MaxarPortalConnect/download.md'
-#        - Metadata Viewer: 'MaxarPortalConnect/metadata.md'
-#        - Release Notes: 'MaxarPortalConnect/release_notes.md'
-    - 'Release Notes':
-        - 'release_notes.md'
+    - 'Release Notes': 'release_notes.md'
 
 docs_dir: 'docs'
 site_dir: 'site'

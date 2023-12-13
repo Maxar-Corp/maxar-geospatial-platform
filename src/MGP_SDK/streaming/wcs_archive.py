@@ -25,6 +25,7 @@ class WCS:
         Returns:
             requests response object of desired image
         """
+        self.auth.check_token_expiration()
         token = self.auth.refresh_token()
         authorization = {'Authorization': 'Bearer {}'.format(token)}
 
