@@ -19,7 +19,7 @@ class Address:
         Returns:
             Dictionary of the desired address' details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/addresses/{}'.format(address_id)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -41,7 +41,7 @@ class Address:
         Returns:
             Dictionary of the new address' details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/addresses'
         payload = {
@@ -77,7 +77,7 @@ class Address:
         Returns:
             Dictionary of the updated address' details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/addresses/'
         address_info = self.get_address(address_id)
@@ -111,9 +111,10 @@ class Address:
         Returns:
             Message of successful deletion
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/addresses?id={}'.format(address_id)
         response = requests.request("DELETE", url, headers=authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return "Address {} successfully deleted".format(address_id)
+    

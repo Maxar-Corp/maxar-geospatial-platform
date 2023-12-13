@@ -20,7 +20,7 @@ class Pipelines:
         Returns:
             Dictionary of all available pipelines and their information
         """
-
+        process.access_token_refresh(self.auth)
         url = f"{self.base_url}?limit=100"
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -35,7 +35,7 @@ class Pipelines:
         Returns:
             Dictionary schema of a specific pipeline
         """
-
+        process.access_token_refresh(self.auth)
         url = f"{self.base_url}/{namespace}/{name}"
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -59,7 +59,7 @@ class Pipelines:
             metadata (dict) = Supplemental information to attch to this order
         :return:
         """
-
+        process.access_token_refresh(self.auth)
         kwarg_list = ['notifications', 'metadata']
         data = {**{k: v for k, v in kwargs.items() if k in kwarg_list}, **settings, **output_config, **metadata}
         if 'validate' in kwargs.keys():
@@ -73,3 +73,4 @@ class Pipelines:
         response = requests.post(url, data=json.dumps(data), headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

@@ -36,7 +36,7 @@ class WMS:
         Returns:
             requests response object of desired image
         """
-
+        process.access_token_refresh(self.auth)
         layers = kwargs['layers'] if 'layers' in kwargs.items() else None
         querystring = self._init_querystring(layers)
         querystring.update({'format': kwargs['format']})
@@ -87,3 +87,4 @@ class WMS:
                        'SDKversion': '{}'.format(self.version)
                        }
         return querystring
+    

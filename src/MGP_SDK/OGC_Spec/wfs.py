@@ -50,7 +50,7 @@ class WFS:
         Returns:
             Response object of the search
         """
-
+        process.access_token_refresh(self.auth)
         querystring = self._init_querystring(typename)
         keys = list(kwargs.keys())
         if 'filter' in keys and kwargs['filter']:
@@ -117,3 +117,4 @@ class WFS:
             'SDKversion': '{}'.format(self.version),
         }
         return querystring
+    

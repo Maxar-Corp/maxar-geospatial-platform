@@ -19,7 +19,7 @@ class Products:
         Returns:
              A list of dictionaries of products and their detials
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = "{}/account-service/api/v1/products".format(self.base_url)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -37,7 +37,7 @@ class Products:
         Returns:
             List of dictionaries of the products that you are filtering for
         """
-
+        process.access_token_refresh(self.auth)
         all_products = self.get_products()
         self._paramater_checker(product_category, usage_type, catalog_type)
         filtered_products = [i for i in all_products if
@@ -61,3 +61,4 @@ class Products:
             catalog_types = ['Online', 'Archive']
             if catalog_type not in catalog_types:
                 raise Exception('Please enter acceptable UsageType. {}'.format(catalog_types))
+    

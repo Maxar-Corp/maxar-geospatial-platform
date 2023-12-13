@@ -34,7 +34,7 @@ class Tasking:
         Returns:
             Dictionary of submitted tasking request's details
         """
-
+        process.access_token_refresh(self.auth)
         time_check = [start_datetime, end_datetime]
         for time in time_check:
             try:
@@ -72,7 +72,7 @@ class Tasking:
         Returns:
             Dictionary of cancelled tasking request's details
         """
-
+        process.access_token_refresh(self.auth)
         payload = {}
         if reason:
             payload['reason'] = reason
@@ -93,7 +93,7 @@ class Tasking:
         Returns:
             Dictionary of tasking requests and their details
         """
-
+        process.access_token_refresh(self.auth)
         optional_parameters = ['limit', 'filter', 'sort']
         params = {**{k: v for k, v in kwargs.items() if k in optional_parameters}}
         response = requests.get(self.base_url, headers=self.authorization, params=params, verify=self.auth.SSL)
@@ -109,11 +109,12 @@ class Tasking:
         Returns:
             Dictionary of a tasking request and its details
         """
-
+        process.access_token_refresh(self.auth)
         url = self.base_url + '/' + tasking_id
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    
 
 
 

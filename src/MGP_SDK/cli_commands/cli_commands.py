@@ -254,7 +254,9 @@ def reset_password(password):
               help='String bounding box of AOI. Comma delimited set of coordinates. (miny,minx,maxy,maxx)', type=str)
 @click.option('--srsname', '-srs', help='String of the desired projection. Defaults to EPSG:4326', default='EPSG:4326')
 @click.option('--filter', '-f', help='CQL filter used to refine data of search', type=str, default=None)
-@click.option('--shapefile', '-s', help='Binary of whether or not to return as shapefile format', is_flag=True,
+@click.option('--shapefile', '-s', help='Flag of whether or not to return as shapefile format. Include this to download as .shp', is_flag=True,
+              default=False)
+@click.option('--csv', '-c', help='Flag of whether or not to return as csv format.  Include this to download as .csv', is_flag=True,
               default=False)
 @click.option('--featureprofile', '-fp', help='String of the desired stacking profile. Defaults to account Default',
               type=str, default="Default")
@@ -263,12 +265,13 @@ def reset_password(password):
               type=str, default="FinishedFeature")
 @click.option('--yes', '-y', help='Flag to bypass one or more variable checks. Defaults to False', is_flag=True,
               default=False)
-def search(bbox, srsname, filter, shapefile, featureprofile, typename, yes):
+def search(bbox, srsname, filter, shapefile, csv, featureprofile, typename, yes):
     """
     Searches an AOI using the WFS method and returns a list of features and their metadata that intersect with
     the AOI
     """
-
+    if csv and shapefile:
+        return click.echo("Invalid input. CSV and Shapefile are mutually exclusive")
     streaming_interface = _streaming()
     home_dir = os.path.expanduser("~")
     with open(os.path.join(home_dir, ".MGP-config"), 'r') as f:
@@ -283,7 +286,7 @@ def search(bbox, srsname, filter, shapefile, featureprofile, typename, yes):
                         if bbox:
                             bbox = bbox
                         else:
-                            return click.echo("No bbox entered and no bbox passed from .MGP-config file")
+                            bbox = None
                     elif bbox_check.lower() == "y":
                         bbox = line.split("=")[1]
                     else:
@@ -295,13 +298,22 @@ def search(bbox, srsname, filter, shapefile, featureprofile, typename, yes):
             else:
                 bbox = bbox
     if not typename:
-        wfs = streaming_interface.search(
-            bbox, srsname=srsname, filter=filter, shapefile=shapefile, featureprofile=featureprofile
-        )
+        if bbox:
+            wfs = streaming_interface.search(
+                bbox, srsname=srsname, filter=filter, shapefile=shapefile,csv=csv, featureprofile=featureprofile
+            )
+        elif filter:
+            wfs = streaming_interface.search(srsname=srsname, filter=filter, shapefile=shapefile,csv=csv, featureprofile=featureprofile
+            )
     else:
-        wfs = streaming_interface.search(
-            bbox, srsname=srsname, filter=filter, shapefile=shapefile, featureprofile=featureprofile, typename=typename
-        )
+        if bbox:
+            wfs = streaming_interface.search(
+                bbox, srsname=srsname, filter=filter, shapefile=shapefile, csv=csv, featureprofile=featureprofile,typename=typename
+            )
+        elif filter:
+            wfs = streaming_interface.search(srsname=srsname, filter=filter, shapefile=shapefile, csv=csv,
+                                             featureprofile=featureprofile,typename=typename
+                                             )
     click.echo(wfs)
 
 

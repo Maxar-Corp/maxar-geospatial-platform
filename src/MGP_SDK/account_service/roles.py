@@ -16,7 +16,7 @@ class Roles:
         Returns:
             List of dictionaries of roles and their details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/roles"
         params = {}
@@ -32,9 +32,10 @@ class Roles:
         Returns:
             List of available user types
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/roles/usertypes"
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

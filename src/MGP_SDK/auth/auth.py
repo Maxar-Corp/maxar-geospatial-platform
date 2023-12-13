@@ -4,6 +4,7 @@ import requests
 import os
 import urllib.parse
 warnings.filterwarnings('ignore', category=DeprecationWarning)
+import datetime
 
 class Auth:
     """
@@ -32,7 +33,8 @@ class Auth:
         self.client_id = client_id
         self.access = None
         self.refresh = None
-        self.version = "Python1.3.0"
+        self.token_expires = None
+        self.version = "Python1.3.1"
         self.api_version = 'v1'
         self.SSL = True
 
@@ -90,6 +92,8 @@ class Auth:
         else:
             self.access = response.json()['access_token']
             self.refresh = response.json()['refresh_token']
+            self.token_expires = datetime.datetime.now() + datetime.timedelta(
+                seconds=int(response.json()["expires_in"]))
             return self.access
 
     def refresh_token(self):
@@ -112,9 +116,13 @@ class Auth:
             else:
                 self.access = response.json()['access_token']
                 self.refresh = response.json()['refresh_token']
+                self.token_expires = datetime.datetime.now() + datetime.timedelta(seconds=int(response.json()["expires_in"]))
                 return self.access
         else:
             self.get_auth()
+
+
+
 
 
     def token_service_token(self):

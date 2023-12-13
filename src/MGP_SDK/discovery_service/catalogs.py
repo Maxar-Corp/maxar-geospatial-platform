@@ -23,7 +23,7 @@ class Catalogs:
         Returns:
             Dictionary of available Sub-Catalogs
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/catalogs'
         kwargs_list = ['orderby', 'limit']
         if "orderby" in kwargs.keys():
@@ -42,7 +42,7 @@ class Catalogs:
         Returns:
             Dictionary of definitions of a Sub-Catalog
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/catalogs/{sub_catalog_id}'
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -59,7 +59,7 @@ class Catalogs:
         Returns:
             Dictionary of collections that belong to a Sub-Catalog
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/catalogs/{sub_catalog_id}/collections'
         kwargs_list = ['orderby', 'limit']
         if "orderby" in kwargs.keys():
@@ -79,7 +79,7 @@ class Catalogs:
         Returns:
             Dictionary of definitions of desired collection that belongs to a Sub-Catalog
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/catalogs/{sub_catalog_id}/collections/{collection_id}'
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -95,7 +95,7 @@ class Catalogs:
         Returns:
             Dictionary of the desired STAC item in a sub-catalog's collection
         """
-
+        process.access_token_refresh(self.auth)
         url = f'{self.base_url}/catalogs/{sub_catalog_id}/collections/{collection_id}/items/{item_id}'
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -117,7 +117,7 @@ class Catalogs:
         Returns:
            Dictionary of STAC item and its information
         """
-
+        process.access_token_refresh(self.auth)
         if 'bbox' and 'intersects' in kwargs.keys():
             raise Exception('When performing a spatial search specify either "bbox" or "intersects" not both.')
         if 'datetime' in kwargs.keys():
@@ -157,4 +157,5 @@ class Catalogs:
         #             is_next = False
 
         return response
+    
 

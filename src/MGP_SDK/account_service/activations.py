@@ -19,7 +19,7 @@ class Activations:
         Returns:
             Dictionary of the found activation or activations
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/activations?search={}'.format(search)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -37,7 +37,7 @@ class Activations:
         Returns:
             Dictionary of all or desired activation(s) and their details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         if activation_id:
             url = self.base_url + '/account-service/api/v1/activations/{}'.format(activation_id)
@@ -60,7 +60,7 @@ class Activations:
         Returns:
             Dictionary of desired activation and its details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/activations/available?accountId={}'.format(account_id)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -75,6 +75,7 @@ class Activations:
         Returns:
             Dictionary of the desired activation's credit details
         """
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/activations/number/{}/credit'.format(activation_number)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -87,9 +88,10 @@ class Activations:
         Returns:
             Dictionary of all activation types
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/activations/types'
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

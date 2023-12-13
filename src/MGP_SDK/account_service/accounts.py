@@ -19,7 +19,7 @@ class Info:
         Returns:
             Dictionary of the found account or accounts
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/accounts?search={}'.format(search)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -39,7 +39,7 @@ class Info:
         Returns:
             Dictionary of account details, list of accounts and their details, or account types and their details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         if account_id:
             url = self.base_url + '/account-service/api/v1/accounts/{}'.format(account_id)
@@ -64,7 +64,7 @@ class Info:
         Returns:
             Dictionary of all roles available for accounts
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/roles/'
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -79,7 +79,7 @@ class Info:
         Returns:
             Dictionary of all comments and their details for a desired account
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/accounts/{}/comments'.format(account_id)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -92,3 +92,4 @@ class Info:
             }
         else:
             return response.json()
+    

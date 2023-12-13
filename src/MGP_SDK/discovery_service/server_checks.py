@@ -23,6 +23,7 @@ class ServerChecks:
         Returns:
             Dictionary of desired endpoint's details
         """
+        process.access_token_refresh(self.auth)
 
         param_list = ['conformance', 'healthcheck', 'status']
         endpoint = ''
@@ -32,3 +33,4 @@ class ServerChecks:
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return response.json()
+    

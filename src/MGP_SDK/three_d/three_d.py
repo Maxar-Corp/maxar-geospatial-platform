@@ -13,7 +13,7 @@ class Three_d:
         Returns:
             Dictionary of 3D layers and their information
         """
-
+        self.auth.check_token_expiration()
         authorization = process.authorization(self.auth)
         url = "{}/capabilities".format(self.base_url)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -31,7 +31,7 @@ class Three_d:
         Returns:
             Dictionary of 3Dtiles layers that overlap the requested area and their information
         """
-
+        self.auth.check_token_expiration()
         authorization = process.authorization(self.auth)
         keys = list(kwargs.keys())
         if 'srs' in keys and kwargs['srs']:
@@ -55,7 +55,7 @@ class Three_d:
         Returns:
             JSON object of the desired 3D layer's information
         """
-
+        self.auth.check_token_expiration()
         authorization = process.authorization(self.auth)
         get_cap = self.get_capabilities_3d()
         uri = [i['uri'] for i in get_cap['layers'] if layer.lower() == i['name']][0]

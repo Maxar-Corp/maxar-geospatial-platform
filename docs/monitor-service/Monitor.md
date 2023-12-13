@@ -6,52 +6,68 @@ capability of ordering that data automatically for delivery to a cloud storage l
 collection parameters that trigger delivery such as cloud cover, off-nadir angle, look angle, time of day, and others 
 when submitting a monitoring request.
 
-### Getting Started: 
+___
+
+### Getting Started 
 ```python
 from MGP_SDK.interface import Interface
 
 monitoring = Interface().monitoring_service
 ```
 
-### Package methods:
+### Package methods
 
-- [Create a New Monitor](#create-a-new-monitor--new_monitor)
-- [Toggle Monitor Status](#toggle-a-monitors-status--toggle_monitor_status)
-- [Get a Monitor](#get-a-monitor--get_monitor)
-- [Get a List of Monitors](#get-a-list-of-monitors--get_monitor_list)
-- [Get Monitor Events](#get-monitor-events--get_monitor_events)
+- [Create a New Monitor](#create-a-new-monitor)
+- [Toggle Monitor Status](#toggle-a-monitors-status)
+- [Get a Monitor](#get-a-monitor)
+- [Get a List of Monitors](#get-a-list-of-monitors)
+- [Get Monitor Events](#get-monitor-events)
 
-### Create a new monitor / new_monitor():
+### Create a new monitor 
+**new_monitor():**
+
 Initiates the creation of a new monitor<br>
-Args:<br>
-**source**: string, the ID of the event source to listen to. e.g 'discovery/catalog'<br>
-**validate**: bool, binary of only validating, not submitting the monitor. Defaults to False
-Keyword Arguments:<br>
-**start_datetime**: string, ISO-8601-formatted datetime string indicating when the monitor should start<br>
-**end_datetime**: string, ISO-8601-formatted datetime string indicating when the monitor should end<br>
-**description**: string, a human-friendly description of the monitor<br>
-**intersects**: dict, a GeoJSON geometry indicating the area of interest for the monitor<br>
-**match_criteria**: dict, the fields and values to match against; criteria are specified using a JSON object<br>
-**monitor_notifications**: list, destination(s) where notifications should be sent<br>
-**order_templates**: list,  orders to be placed automatically when an event matches the monitor's criteria<br>
+
+**Args:<br>**
+
+* source: (*str*) ID of the event source to listen to. e.g 'discovery/catalog'<br>
+* validate: (*bool*) Binary of only validating, not submitting the monitor. Defaults to False
+
+**Keyword Arguments:<br>**
+
+* start_datetime: (*str*) ISO-8601-formatted datetime string indicating when the monitor should start<br>
+* end_datetime: (*str*) ISO-8601-formatted datetime string indicating when the monitor should end<br>
+* description: (*str*) A human-friendly description of the monitor<br>
+* intersects: (*dict*) A GeoJSON geometry indicating the area of interest for the monitor<br>
+* match_criteria: (*dict*) The fields and values to match against; criteria are specified using a JSON object<br>
+* monitor_notifications: (*list*) Destination(s) where notifications should be sent<br>
+* order_templates: (*list*) Orders to be placed automatically when an event matches the monitor's criteria<br>
 ```python
 new_monitor = monitoring.new_monitor('discover/catalog', start_datetime='2023-05-08T12:00:00.000000+00:00', end_datetime='2023-05-10T12:0:00.000000+00:00', description='test_monitor')
 print(new_monitor)
 ```
 
-### Toggle a monitor's status / toggle_monitor_status()
+### Toggle a monitor's status 
+**toggle_monitor_status()**
+
 Enables or disables a monitor<br>
-Args:<br>
-**monitor_id**: string, the ID of the monitor<br>
-**status**: string, 'enable' or 'disable'<br>
+
+**Args:<br>**
+
+* monitor_id: (*str*) ID of the monitor<br>
+* status: (*str*) `enable` or `disable`<br>
 ```python
 monitoring.toggle_monitor_status('6130456176116070854', 'disable')
 ```
 
-### Get a Monitor / get_monitor()
+### Get a Monitor 
+**get_monitor()**
+
 Retrieves a monitor configuration<br>
-Args:<br>
-**monitor_id**: string, the ID of the monitor<br>
+
+**Args:<br>**
+
+* monitor_id: (*str*) ID of the monitor<br>
 ```python
 status = monitoring.get_monitor('6130456176116070854')
 print(status)
@@ -140,27 +156,37 @@ print(status)
 ```
 </details>
 
-### Get a List of Monitors / get_monitor_list()
+### Get a List of Monitors 
+**get_monitor_list()**
+
 Retrieves a list of monitor configurations<br>
-Keyword Arguments:<br>
-**limit**: int, number of monitors to return, defaults to 10<br>
-**filter**: string | list[string], filter results that match values contained in the given key separated by a colon. If
+
+**Kwargs:<br>**
+
+* limit: (*int*) Number of monitors to return, defaults to 10<br>
+* filter: (*str*) (*list[string]*) Filter results that match values contained in the given key separated by a colon. If
 multiple filters are needed, provide as a list of filters<br>
-**sort**: string, asc (default) or desc
+* sort: (*str*) `asc` (default) or `desc`
 ```python
 monitor_list = monitoring.get_monitor_list(limit=5, filter='enabled=false', sort='desc')
 print(monitor_list)
 ```
 
-### Get Monitor Events / get_monitor_events()
+### Get Monitor Events 
+**get_monitor_events()**
+
 Retrieves a list of events for a monitor<br>
-Args:<br>
-**monitor_id**: string, the ID of the monitor<br>
-Keyword Arguments:<br>
-**limit**: int, number of monitors to return, defaults to 10<br>
-**filter**: string | list[string], filter results that match values contained in the given key separated by a colon. If
+
+**Args:<br>**
+
+* monitor_id: (*str*) ID of the monitor<br>
+
+**Kwargs:<br>**
+
+* limit: (*int*) Number of monitors to return, defaults to 10<br>
+* filter: (*str*) (*list[string]*) Filter results that match values contained in the given key separated by a colon. If
 multiple filters are needed, provide as a list of filters<br>
-**sort**: string, asc (default) or desc
+* sort: (*str*) `asc` (default) or `desc`
 ```python
 monitor_events = monitoring.get_monitor_events('6130456176116070854', limit=7)
 print(monitor_events)

@@ -45,7 +45,7 @@ class RasterAnalytics:
         Returns:
             URL formatted with desired parameters and /vsicurl/ prefix
         """
-
+        self.auth.check_token_expiration()
         if script_id.lower() == 'browse':
             if function != "browse":
                 raise Exception("{} is not a valid function. Please use browse".format(function))
@@ -103,7 +103,7 @@ class RasterAnalytics:
         Returns:
              Dictionary of various raster metadata information
         """
-
+        self.auth.check_token_expiration()
         gdal = self._gdal_check()
         dataset = gdal.Open(raster_url)
         metadata = dataset.GetMetadata()
@@ -130,7 +130,7 @@ class RasterAnalytics:
         Returns:
             List of arrays of the raster's pixels
         """
-
+        self.auth.check_token_expiration()
         gdal = self._gdal_check()
         dataset = gdal.Open(raster_url)
         img_arrays = []
@@ -149,7 +149,7 @@ class RasterAnalytics:
         Returns:
             Success message
         """
-
+        self.auth.check_token_expiration()
         img = np.dstack((raster_array[0], raster_array[1], raster_array[2]))
         matplotlib.image.imsave(outputpath, img)
         return "Raster image saved in {}".format(outputpath)

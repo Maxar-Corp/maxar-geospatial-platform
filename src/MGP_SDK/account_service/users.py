@@ -20,7 +20,7 @@ class Users:
         Returns:
             Dictionary of the found user or users
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + '/account-service/api/v1/users?search={}'.format(search)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -41,7 +41,7 @@ class Users:
         Returns:
             Dictionary of the desired user's details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         if user_id:
             url = self.base_url + "/account-service/api/v1/users/{}".format(user_id)
@@ -69,7 +69,7 @@ class Users:
         Returns:
             Dictionary of the updated user's details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users"
         payload = self.get_users(user_id)
@@ -96,7 +96,7 @@ class Users:
         Returns:
             Dictionary of the created user's details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users/{}".format(client_id)
 
@@ -129,7 +129,7 @@ class Users:
         Returns:
             Dictionary of the updated user roles or response object of the deleted role(s)
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         if type(roles_to_update) != list:
             raise Exception('rolesToUpdate must be a list')
@@ -179,7 +179,7 @@ class Users:
         Returns:
             Dictionary of the roles and their details assigned to a specified user
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users/roles/assigned/{}".format(user_id)
         params = {}
@@ -201,7 +201,7 @@ class Users:
         Returns:
             Dictionary of the roles and their details that a user has the ability to be assigned
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users/roles/assigned-available/{}?clientContextId={}".format(
             user_id, client_id)
@@ -217,9 +217,10 @@ class Users:
         Returns:
             Message of successful deletion
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = self.base_url + "/account-service/api/v1/users?userId={}".format(user_id)
         response = requests.request("DELETE", url, headers=authorization, verify=self.auth.SSL)
         process._response_handler(response)
         return "User {} successfully deleted".format(user_id)
+    

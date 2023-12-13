@@ -16,7 +16,7 @@ class Token:
         Returns:
             Dictionary of all tokens for your user
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = "{}/token-service/api/v2/token".format(self.base_url)
         response = requests.request("GET", url, headers=authorization, verify=self.auth.SSL)
@@ -32,7 +32,7 @@ class Token:
         Returns:
             Dictionary of the newly created token and its details
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         url = "{}/token-service/api/v2/token".format(self.base_url)
         payload = {
@@ -53,7 +53,7 @@ class Token:
         Return:
             Message of successful deletion
         """
-
+        process.access_token_refresh(self.auth)
         authorization = process.authorization(self.auth)
         if type(token) == str:
             url = "{}/token-service/api/v2/token/id/{}".format(self.base_url, token)
@@ -69,3 +69,4 @@ class Token:
             return "Token {} successfully deleted".format(token)
         else:
             return "Token not deleted, response code of {} received".format(response.status_code)
+    

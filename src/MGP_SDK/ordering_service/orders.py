@@ -23,7 +23,7 @@ class Orders:
         Returns:
             JSON response
         """
-
+        process.access_token_refresh(self.auth)
         url = f"{self.base_url}/{order_id}"
         response = requests.get(url, headers=self.authorization, verify=self.auth.SSL)
         process._response_handler(response)
@@ -40,7 +40,7 @@ class Orders:
         Returns:
             Dictionary of order events for a desired order
         """
-
+        process.access_token_refresh(self.auth)
         if 'limit' in kwargs.keys():
             try:
                 int(kwargs['limit'])
@@ -76,7 +76,7 @@ class Orders:
         Returns:
             Dictionary of orders from a desired user
         """
-
+        process.access_token_refresh(self.auth)
         if 'limit' in kwargs.keys():
             try:
                 int(kwargs['limit'])
@@ -120,7 +120,7 @@ class Orders:
         Returns:
             Dictionary of desired order's status
         """
-
+        process.access_token_refresh(self.auth)
         url = f"{self.base_url}/{order_id}/cancel"
         response = requests.post(url, headers=self.authorization, verify=self.auth.SSL)
         error_message = "Pipeline does not support order cancellation"
@@ -129,3 +129,4 @@ class Orders:
         else:
             process._response_handler(response)
             return response.json()
+    
