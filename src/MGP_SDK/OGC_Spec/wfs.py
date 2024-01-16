@@ -54,7 +54,7 @@ class WFS:
         querystring = self._init_querystring(typename)
         keys = list(kwargs.keys())
         if 'filter' in keys and kwargs['filter']:
-            process.cql_checker(kwargs['filter'], endpoint=self.endpoint, token=self.token)
+            pass #process.cql_checker(kwargs['filter'], endpoint=self.endpoint, token=self.token)
             if 'bbox' in keys and kwargs['bbox']:
                 if srsname == "EPSG:4326":
                     process._validate_bbox(kwargs['bbox'], srsname=srsname)
