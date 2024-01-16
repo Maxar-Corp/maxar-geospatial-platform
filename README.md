@@ -1,7 +1,7 @@
 # Maxar Geospatial Platform SDK
 
 # Installation Instructions
-1. Install python 3.7
+1. Install python 3.8
 1. pip install MGP_SDK
 1. Create a credentials file called `.mgp-config` 
    * The file should look like:

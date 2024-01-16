@@ -1,5 +1,8 @@
 # Release Notes
 
+## Version 1.3.2 (Jan 16, 2024)
+* Removed CQL check function
+
 ## Version 1.3.1 (Dec 13, 2023)
 * Updated various functions to better handle auth and refresh tokens
 * Updated response handler to return better status messaging
